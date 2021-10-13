@@ -8,7 +8,8 @@ export ZSH="/Users/Henock.Zewde@ig.com/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+# ZSH_THEME="robbyrussell"
+ZSH_THEME="bureau"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -105,13 +106,11 @@ source $ZSH/oh-my-zsh.sh
 #                               #
 #################################
 
+export LINUX_USR=zewdeh
 
-# Source helper files
-for helper_file in ~/.{aliases,ig_functions}; do
-  [ -r "$helper_file" ] && [ -f "$helper_file" ] && source "$helper_file" ; 
+# Source my _extension files
+for extension_file in ~/.*_extension; do
+  echo "Sourcing $extension_file"
+  [ -r "$extension_file" ] && [ -f "$extension_file" ] && source "$extension_file" ;
 done;
-unset helper_file;
-
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
+unset extension_file;

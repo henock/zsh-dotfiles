@@ -1,5 +1,7 @@
 #! /bin/bash
 
+debug=1
+
 # clear the screen
 alias c='clear'
 
@@ -11,29 +13,25 @@ alias p="cd ~/projects"
 
 
 # Create links to alias for all projects
-for i in $(ls ~/projects); do  alias c.$i='cd ~/projects/'$i; done
+for i in $(find ~/projects -depth 3 -type d | grep '.git$' | sed -e 's#/.git$##g' ) ; do
+  name=$(basename $i)
+  alias c."$name"="cd $i";
+done
 
 # Git
 alias gs='git status -s'
 alias gc='git commit'
 alias ga='git add'
-
 # View abbreviated SHA, description, and history graph of the latest 20 commits
 alias gl='git log --pretty=oneline -n 20 --graph --abbrev-commit'
-
 # Show the diff between the latest commit and the current state
 alias gd='git diff-index --quiet HEAD -- || clear; git --no-pager diff --patch-with-stat'
-
 alias gp='git pull'
-
 alias gb='git branch'
 alias gba='git branch -a'
-
 alias gcm='git commit -m'
-
 alias gco='git checkout'
 alias gcom='gco master'
-
 alias gt='git tag -l'
 
 
@@ -142,7 +140,7 @@ alias pumpitup="osascript -e 'set volume output volume 100'"
 alias afk="pmset displaysleepnow"
 
 # Reload the shell (i.e. invoke as a login shell)
-alias reload="echo 'Reloading..' && sleep 1 && exec ${SHELL} -l"
+alias reload="echo 'Reloading..' && exec ${SHELL} -l"
 
 # Print each PATH entry on a separate line
 alias path='echo -e ${PATH//:/\\n}'

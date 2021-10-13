@@ -1,4 +1,5 @@
 #! /bin/bash
+set -eu
 
 # Credit: Original version found here: https://github.com/jeffaco/dotfiles/blob/master/nix/bootstrap.sh
 
@@ -9,8 +10,17 @@
 # Can't use something like 'readlink -e $0' because that doesn't work everywhere
 # And HP doesn't define $PWD in a sudo environment, so we define our own
 
-# Only ever want to do this the first time
+function chek_for_and_remove_symlinks() {
+  TARGET_FILE=$1
+  if [ -f "$TARGET_FILE" -o -h "$TARGET_FILE" ]; then
+#    echo "Replacing file: $TARGET_FILE"
+    rm "$TARGET_FILE"
+  else
+    echo "Creating the link $i -> $TARGET_FILE"
+  fi
+}
 
+# Only ever want to do this the first time
 case $0 in
     /*|~*)
         PROJECT_FOLDER="$(dirname "$0")"
@@ -22,27 +32,20 @@ case $0 in
 esac
 
 # Setting BASEDIR to something like /Users/<userName>/projects/zsh-dotfiles/
-BASE_DIR="`(cd \"$PROJECT_FOLDER\"; pwd -P)`"
+BASE_DIR="$(cd $PROJECT_FOLDER; pwd -P)"
+EXTENSIONS_DIR="$BASE_DIR/extensions/"
+ZSHRC_FILE="$BASE_DIR/.zshrc"
 
-# 'deploy' the dotfiles to the users home dir by symlinking them to the project location eg. ~/.aliases -> <this_projects_location>/.aliases
-for i in "$BASE_DIR"/.{aliases,zshrc,ig_functions}; do
+echo -e "\nDeploying .zshrc and all extension files...\n"
 
-
-  [ ! -f $i ] && echo "$i does not exist continuing..." && continue
-
-#  DOT_FILE_DIR=`dirname $i`
+# 'deploy' the dotfiles to the users home dir by symlinking them to the project location eg. ~/.aliases_extension -> <this_projects_location>/.aliases_extension
+for i in "$ZSHRC_FILE" "$EXTENSIONS_DIR".* ; do
+  [ ! -f $i ]  && continue    # Ignore anything that is not a file
+  SOURCE_DIR=`dirname $i`
   DOT_FILE=`basename $i`
-  TARGET_FILE=$HOME/$DOT_FILE
-
-    echo "Deploying $DOT_FILE"
-
-
-  if [ -f "$TARGET_FILE" -o -h "$TARGET_FILE" ]; then
-#    echo "Replacing file: $TARGET_FILE"
-    rm "$TARGET_FILE"
-  else
-    echo "Creating the link $i -> $TARGET_FILE"
-  fi
-
-  ln -s "$i" "$TARGET_FILE"
+  SOURCE_FILE="$SOURCE_DIR/$DOT_FILE"
+  TARGET_FILE="$HOME/$DOT_FILE"
+  chek_for_and_remove_symlinks "$TARGET_FILE"
+  echo "ln -s $SOURCE_FILE $TARGET_FILE"
+  ln -s "$SOURCE_FILE" "$TARGET_FILE"
 done
