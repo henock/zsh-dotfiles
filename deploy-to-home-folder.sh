@@ -35,16 +35,22 @@ esac
 BASE_DIR="$(cd $PROJECT_FOLDER; pwd -P)"
 EXTENSIONS_DIR="$BASE_DIR/extensions/"
 ZSHRC_FILE="$BASE_DIR/.zshrc"
+TARGET_DIR="$HOME/.zsh_config/"
 
-echo -e "\nDeploying .zshrc and all extension files...\n"
+
+echo -e "\nDeploying .zshrc and all my extension files...\n"
+
+test -d "$TARGET_DIR"] || echo "Creating $TARGET_DIR" && mkdir -p "$TARGET_DIR"
+chek_for_and_remove_symlinks "$HOME/.zshrc"
+ln -s "$ZSHRC_FILE" "$HOME/.zshrc"
 
 # 'deploy' the dotfiles to the users home dir by symlinking them to the project location eg. ~/.aliases_extension -> <this_projects_location>/.aliases_extension
-for i in "$ZSHRC_FILE" "$EXTENSIONS_DIR".* ; do
+for i in "$EXTENSIONS_DIR".* ; do
   [ ! -f $i ]  && continue    # Ignore anything that is not a file
   SOURCE_DIR=`dirname $i`
   DOT_FILE=`basename $i`
   SOURCE_FILE="$SOURCE_DIR/$DOT_FILE"
-  TARGET_FILE="$HOME/$DOT_FILE"
+  TARGET_FILE="$TARGET_DIR/$DOT_FILE"
   chek_for_and_remove_symlinks "$TARGET_FILE"
   echo "ln -s $SOURCE_FILE $TARGET_FILE"
   ln -s "$SOURCE_FILE" "$TARGET_FILE"
