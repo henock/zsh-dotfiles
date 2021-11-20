@@ -15,6 +15,8 @@ function check_for_and_remove_symlinks() {
   if [ -f "$TARGET_FILE" ] || [ -h "$TARGET_FILE" ]; then
 #    echo "Replacing file: $TARGET_FILE"
     rm "$TARGET_FILE"
+  else
+    echo "Creating the link for $TARGET_FILE"
   fi
 }
 
@@ -120,5 +122,14 @@ BASE_DIR="$(cd $PROJECT_FOLDER; pwd -P)"  # Setting BASEDIR to something like /U
 symlink_my_zsh_extensions
 setting_up_syntax_highlighting
 setting_up_sublime_key_mappings_file
+
+echo -e ""
+echo -e ""
+echo -e "Restarting zsh to apply the .files in 3"
+sleep 1
+echo -e "                                      2"
+sleep 1
+echo -e "                                      1"
+sleep 1
 
 echo -n 'Reloading' && exec zsh
