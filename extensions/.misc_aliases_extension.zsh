@@ -17,7 +17,7 @@ alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[
 alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
 
 # Flush Directory Service cache
- alias flush-dns-cache="dscacheutil -flushcache && killall -HUP mDNSResponder"
+alias flush-dns-cache="dscacheutil -flushcache && killall -HUP mDNSResponder"
 
 
 # macOS has no `md5sum`, so use `md5` as a fallback
@@ -54,5 +54,7 @@ alias afk="pmset displaysleepnow"
 
 # Print each PATH entry on a separate line
 alias path='echo -e ${PATH//:/\\n}'
+
+alias findDosFiles='find . -type f | xargs file | grep "CRLF"'
 
 

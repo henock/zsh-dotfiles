@@ -25,7 +25,7 @@ function watch() {
 }
 
 
-function dos-to-unix() {
+function dos2unix() {
   if [[ $# -eq 0 ]]; then
     echo -e "\nUsage: dos-to-unix <input-file> [output-file]\n"
     echo -e 'if the $2 is omitted then;  $1 convert  "$1-dos-to-unix-step" && mv "$1-dos-to-unix-step" $1'
