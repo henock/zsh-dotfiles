@@ -6,6 +6,7 @@ setopt pushd_ignore_dups
 setopt pushdminus
 
 # alias -g ... means that its a global alias (and therefore can be used with pipe command.. eg: cat file.txt | grep bob | .../bobs.txt )
+alias -g ..='cd ..'
 alias -g ...='cd ../..'
 alias -g ....='cd ../../..'
 alias -g .....='cd ../../../..'
@@ -32,6 +33,7 @@ alias l='ls -lah'
 alias lsa='ls -lah'
 alias ll='ls -lh'
 alias la='ls -lAh'
+alias ldot='ls -ld .*'
 
 # clear the screen
 alias c='clear'
@@ -65,6 +67,7 @@ alias tlf='tail -Fn100'
 
 
 alias ff='find . -type f -name'
+alias ffd='find . -type d -name'
 
 # Enable aliases to be sudo’ed
 alias sudo='sudo '
@@ -73,6 +76,7 @@ alias sudo='sudo '
 alias week='date +%V'
 
 alias grep='grep --color'
+alias sgrep='grep -R -n -H -C 5 --exclude-dir={.git}'
 
 #Open the current folder with Finder
 alias ofd='open_command $PWD'

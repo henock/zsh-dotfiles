@@ -20,6 +20,9 @@ export PATH="$HOME/bin:$PATH";
 #Stop highlighting text when pasting into the terminal
 zle_highlight=('paste:none')
 
+# allows for auto complete to work
+autoload -Uz compinit
+compinit
 
 autoload colors
 colors
@@ -41,5 +44,8 @@ bindkey "[D" backward-word
 bindkey "[C" forward-word
 
 end_time="$(date +%s)"
+
+## HAS TO BE THE LAST FOR IT WORK
+source ~/.zsh_plugins/.zsh-syntax-highlighting.zsh
 
 echo "Time taken: $(($end_time - $start_time))s"

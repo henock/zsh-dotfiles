@@ -7,6 +7,46 @@ if [ $? -eq 0 ]; then
 fi;
 
 
+hash jq &>/dev/null;
+if [ $? -eq 0 ]; then
+
+  jq_logs_and_errors='grep -io "\"message\":.*\|\"stack_trace\":.*" | sed "s/\\n/\n/g" | sed "s/\\t/\t/g"'
+
+  function jql() {
+    while read -r data; do
+        printf "%s" "$data" |jq -R -r '. as $line | try fromjson catch $line'
+    done
+  }
+
+  function jqlg() {
+    if [ $# -ne 1 ]; then    # log level
+        echo "Usage:  <kubectl logs...> | jqll <text to grep for>"
+    fi
+    while read -r data; do
+        printf "%s" "$data" | jq -R -r '. as $line | try fromjson catch $line' | "$jq_logs_and_errors" | grep -i "$2"
+    done
+  }
+
+  function jqle() {
+    while read -r data; do
+        if [ $# -eq 1 ]; then    # log level
+            printf "%s" "$data" | jq -R -r '. as $line | try fromjson catch $line' | grep -ib4 "\"level\": \"error\"" | "$jq_logs_and_errors"
+        fi
+    done
+  }
+
+  function jqll() {
+    while read -r data; do
+        if [ $# -eq 1 ]; then    # log level
+            printf "%s" "$data" | jq -R -r '. as $line | try fromjson catch $line' | grep -ib4 "\"level\": \"$1\"" | "$jq_logs_and_errors"
+        else
+            printf "%s" "$data" | jq -R -r '. as $line | try fromjson catch $line' | grep -io "\"message\":.*\|\"stack_trace\":.*" | sed 's/\\n/\n/g' | sed 's/\\t/\t/g'
+        fi
+    done
+  }
+fi
+
+
 function watch() {
   echo "$#"
   if [ $# -ne 2 ]; then
