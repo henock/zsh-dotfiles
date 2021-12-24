@@ -70,27 +70,35 @@ function setting_up_syntax_highlighting() {
 }
 
 function setting_up_sublime_key_mappings_file() {
-  SUBLIME_KEYMAP_FILE="$HOME/Library/Application Support/Sublime Text/Packages/User/Default (OSX).sublime-keymap"
-  MY_SUBLIME_KEYMAP_FILE="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
-  PERFORM_COPY=-1
-  if [ -f "$SUBLIME_KEYMAP_FILE" ]; then
-    if ! diff "$SUBLIME_KEYMAP_FILE" "$MY_SUBLIME_KEYMAP_FILE";
-    then
-      BACK_UP_NAME_EXTENSION="$(date | sed 's/ /_/g')"
-      BACK_UP_FILE="$SUBLIME_KEYMAP_FILE.bak-$BACK_UP_NAME_EXTENSION"
-      echo "Found a sublime keymap file different to mine backed it up to $BACK_UP_FILE"
-      mv "$SUBLIME_KEYMAP_FILE" "$BACK_UP_FILE"
-      echo "And replacing it with mine"
+  set +e #Temprarily allow a command to fail without exiting the script.
+  SUBLIME_KEYMAP_FOLDER=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
+  set -e
+  if [[ -d "$SUBLIME_KEYMAP_FOLDER" ]]; then
+    set +e #Temprarily allow a command to fail without exiting the script.
+    SUBLIME_KEYMAP_FILE=$(find "$SUBLIME_KEYMAP_FOLDER" |  grep '/Default (OSX).sublime-keymap$')
+    set -e
+    MY_SUBLIME_KEYMAP_FILE="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
+    PERFORM_COPY=-1
+    if [ -f "$SUBLIME_KEYMAP_FILE" ]; then
+      if ! diff "$SUBLIME_KEYMAP_FILE" "$MY_SUBLIME_KEYMAP_FILE"; then
+        BACK_UP_NAME_EXTENSION="$(date | sed 's/ /_/g')"
+        BACK_UP_FILE="$SUBLIME_KEYMAP_FILE.bak-$BACK_UP_NAME_EXTENSION"
+        echo "Found a sublime keymap file different to mine (above is the difference) backed it up to $BACK_UP_FILE"
+        mv "$SUBLIME_KEYMAP_FILE" "$BACK_UP_FILE"
+        echo "And replacing it with mine"
+        PERFORM_COPY=0
+      fi
+    else
+      echo "Sublime keymap not found, copying in mine"
       PERFORM_COPY=0
     fi
-  else
-    echo "Sublime keymap not found, copying in mine"
-    PERFORM_COPY=0
-  fi
 
-  if [ "$PERFORM_COPY" -eq 0 ]; then
-    echo "Copying $MY_SUBLIME_KEYMAP_FILE to $SUBLIME_KEYMAP_FILE"
-    cp "$MY_SUBLIME_KEYMAP_FILE" "$SUBLIME_KEYMAP_FILE"
+    if [ "$PERFORM_COPY" -eq 0 ]; then
+      echo "Copying $MY_SUBLIME_KEYMAP_FILE to $SUBLIME_KEYMAP_FOLDER"
+      cp "$MY_SUBLIME_KEYMAP_FILE" "$SUBLIME_KEYMAP_FOLDER"
+    fi
+  else
+    echo "Sublime folder not found, not setting the keymap file."
   fi
 
 }
