@@ -44,17 +44,6 @@ alias dl="cd ~/Downloads"
 alias dt="cd ~/Desktop"
 alias p="cd ~/projects"
 
-## Create links to alias for all projects
-for i in ~/projects/* ; do
-  for x in "$i"/* ; do
-    dir=$(dirname $x)
-    name=$(basename $x)
-#    echo "$(date +%s) - for $dir/$name"
-    alias c."$name"="cd $dir/$name";
-  done
-done
-
-
 alias la="l -A"
 alias cl="clear && l"
 alias cla="clear && la"
@@ -80,3 +69,16 @@ alias sgrep='grep -R -n -H -C 5 --exclude-dir={.git}'
 
 #Open the current folder with Finder
 alias ofd='open_command $PWD'
+
+
+# Create links to alias for all projects
+for i in ~/projects/* ; do
+  if [ -d "$i" ]; then
+    for x in "$i"/* ; do
+      dir=$(dirname "$x")
+      name=$(basename "$x")
+#      echo "$(date +%s) - for $dir/$name"
+      alias c."$name"="cd $dir/$name";
+    done
+  fi
+done
