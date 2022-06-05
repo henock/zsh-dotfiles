@@ -1,11 +1,10 @@
 # Kubernetes
 export KUBECONFIG=~/.kube/dev:~/.kube/sandbox:~/.kube/test:~/.kube/uat:~/.kube/prod1:~/.kube/prod2
 
-alias setup-minikube='eval $(minikube docker-env)'
-alias start-docker='minikube start --driver=virtualbox --embed-certs && eval $(minikube docker-env)'
-
+alias setup-minikube='eval $(minikube podman-env)'
 
 alias k=kubectl
+alias p=podman
 
 # Pod management.
 alias kgp='kubectl get pods'
@@ -18,6 +17,7 @@ alias kdp='kubectl describe pods'
 alias kga='kubectl get all'
 alias ckga='clear && kubectl get all'
 alias kaf='kubectl apply -f '
+
 alias kdelp='kubectl delete pods'
 alias kgpall='kubectl get pods --all-namespaces -o wide'
 
