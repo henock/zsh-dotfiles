@@ -18,6 +18,7 @@ alias kga='kubectl get all'
 alias ckga='clear && kubectl get all'
 alias kaf='kubectl apply -f '
 
+
 alias kdelp='kubectl delete pods'
 alias kgpall='kubectl get pods --all-namespaces -o wide'
 
