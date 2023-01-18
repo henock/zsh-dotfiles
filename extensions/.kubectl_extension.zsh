@@ -1,10 +1,10 @@
 # Kubernetes
 export KUBECONFIG=~/.kube/dev:~/.kube/sandbox:~/.kube/test:~/.kube/uat:~/.kube/prod1:~/.kube/prod2
 
-alias setup-minikube='eval $(minikube podman-env)'
+alias setup-minikube='eval $(minikube docker-env)'
+alias start-minikube='minikube start --driver=virtualbox --embed-certs && eval $(minikube docker-env)'
 
 alias k=kubectl
-alias p=podman
 
 # Pod management.
 alias kgp='kubectl get pods'

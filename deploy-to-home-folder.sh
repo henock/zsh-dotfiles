@@ -102,7 +102,34 @@ function setting_up_sublime_key_mappings_file() {
   else
     echo "Sublime folder not found, not setting the keymap file."
   fi
+}
 
+# Only ever want to do this the first time
+function copy_vim_files_to_root(){
+  #Copy .vim files to home folder
+  cp ./.vim/.vimrc/ ~/.vimrc
+  cp -r ./.vim/.gvimrc/ ~/.gvimrc
+
+  #Copy .vim/<folders> to ~/.vim/<folders>
+  cp -r ./.vim/backups/ ~/.vim/backups
+  cp -r ./.vim/colors ~/.vim/colors
+  cp -r ./.vim/syntax/ ~/.vim/syntax
+  cp -r ./.vim/swaps/ ~/.vim/swaps
+  cp -r ./.vim/undo/ ~/.vim/undo
+}
+
+function setting_up_vim() {
+  if [ ! -e ~/.vim/swaps/ ]; then
+      echo ".vim folder not set up yet.. find ~/.vim looks like so"
+      find ~/.vim
+    read -p "Do you want me to copy over .vim/<folders>  (backups|colors|swaps|syntax|undo) into ~ (y/n) " -n 1;
+    echo "";
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      copy_vim_files_to_root;
+      source ~/.vimrc
+      source ~/.gvimrc
+    fi;
+  fi
 }
 
 
@@ -120,6 +147,7 @@ esac
 
 BASE_DIR="$(cd $PROJECT_FOLDER; pwd -P)"  # Setting BASEDIR to something like /Users/<userName>/projects/zsh-dotfiles/
 symlink_my_zsh_extensions
+setting_up_vim
 setting_up_syntax_highlighting
 setting_up_sublime_key_mappings_file
 

@@ -29,7 +29,7 @@ alias rd=rmdir
 # List directory contents
 alias ls='ls -G'
 
-alias l='ls -lah'
+alias l='ls -lh'
 alias lsa='ls -lah'
 alias ll='ls -lh'
 alias la='ls -lAh'
@@ -69,6 +69,12 @@ alias sgrep='grep -R -n -H -C 5 --exclude-dir={.git}'
 
 #Open the current folder with Finder
 alias ofd='open_command $PWD'
+
+
+# Create a new directory and enter it
+function mkd() {
+    mkdir -p "$@" && cd "$_";
+}
 
 
 # Create links to alias for all projects
