@@ -72,7 +72,7 @@ function dos2unix() {
   elif [[ $# -eq 1 ]]; then
     DOS_TO_UNIS_STEP_FILE="$1.dos_to_unix_step"
     cat "$1" | awk '{ sub ("\r$", "" ); print }' > "$DOS_TO_UNIS_STEP_FILE" && mv "$DOS_TO_UNIS_STEP_FILE" "$1"
-  elif [[ $# -eq 2 ]] then
+  elif [[ $# -eq 2 ]]; then
     cat "$1" | awk '{ sub ("\r$", "" ); print }' > $2
   fi
 }
@@ -124,13 +124,15 @@ function get_numeric_month() {
 }
 
 function file_created_date() {
-    long_list=`ls -lU "$@"`
-    year=`echo $long_list | awk '{print $8;}'`;
-    month_as_string=`echo $long_list | awk '{print $6;}'`;
-    day=`echo $long_list | awk '{print $7;}'`;
-    day=`prepend_zero_to_a_single_digit_if_needed $day`
-    month=`get_numeric_month $month_as_string`
-    echo "$year-$month-$day";
+  #The GetFileInfo command is depricated so 1st check if it still there
+  command -v GetFileInfo > /dev/null 2>&1
+	if [ $? -eq 1 ]; then
+   		say "GetFileInfo not found, exiting"
+		exit -1
+	fi
+
+	#Output of GetFileInfo is in US date format
+  echo $(GetFileInfo -d "$@" | awk '{print $1}' | awk 'BEGIN { FS = "/" }; {print $3 "-"  $1 "-" $2}')
 }
 
 #Rename all files with space to have underscores instead
@@ -151,9 +153,23 @@ function rename_prepending_created_date(){
 
 #Rename all files prePending last modified date and replacing space to have _ instead
 function rename_prepending_created_date_replacing_spaces(){
-   for i in "$@"; do
-     minus_spaces=$(replace_spaces_with_underscores "$i");
-     new_file_name=$(file_created_date "$i")"_$minus_spaces"
-     mv "$i" "$new_file_name";
-   done
+  for i in "$@"; do
+    if [[ -d $i ]]; then
+      echo "dir"
+      the_dir="${i%/*}"
+      echo "the_dir: $the_dir"
+      minus_spaces=$(replace_spaces_with_underscores "$the_dir");
+      new_dir_name="$(file_created_date "$i")_$minus_spaces"
+      new_path="$new_dir_name"
+    elif [[ -f $i ]]; then
+      echo "file"
+      the_file="$i"
+      echo "the_file: $the_file"
+      minus_spaces=$(replace_spaces_with_underscores "$the_file");
+      new_file_name="$(file_created_date "$i")_$minus_spaces"
+      new_path="$new_file_name"
+    fi
+    echo "new_path: '$new_path'"
+    mv "$i" "$new_path";
+  done
 }
