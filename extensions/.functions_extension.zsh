@@ -90,7 +90,7 @@ function replace_spaces_with_underscores() {
     echo "$@" | sed 's/ /_/g'
 }
 
-function prepend_zero_to_a_single_digit_if_needed() {
+function prefix_zero_to_a_single_digit_if_needed() {
     case "$@"  in
       "1") echo '01';;
       "2") echo '02';;
@@ -128,7 +128,7 @@ function file_created_date() {
   command -v GetFileInfo > /dev/null 2>&1
 	if [ $? -eq 1 ]; then
    		say "GetFileInfo not found, exiting"
-		exit -1
+		exit 1
 	fi
 
 	#Output of GetFileInfo is in US date format
@@ -137,39 +137,142 @@ function file_created_date() {
 
 #Rename all files with space to have underscores instead
 function rename_replacing_spaces(){
-   for i in "$@"; do
-     minus_spaces=$(replace_spaces_with_underscores "$i");
-     mv "$i" "$minus_spaces";
-   done
-}
-
-#Raname files to have the date of file created in yyyy-mm-dd-<file-name> format
-function rename_prepending_created_date(){
-   for i in "$@"; do
-     new_file_name=$(file_created_date "$i")"_$i"
-     mv "$i" "$new_file_name";
+  for i in "$@"; do
+    minus_spaces=$(replace_spaces_with_underscores "$i");
+    move_with_prompt "$i" "$minus_spaces";
   done
 }
 
-#Rename all files prePending last modified date and replacing space to have _ instead
-function rename_prepending_created_date_replacing_spaces(){
+#Raname files to have the date of file created in yyyy-mm-dd-<file-name> format
+function rename_prefixing_created_date(){
+   for i in "$@"; do
+    new_file_name=$(file_created_date "$i")"_$i"
+    move_with_prompt "$i" "$new_file_name";
+  done
+}
+
+#Rename all files prefixing last modified date and replacing space to have _ instead
+function rename_prefixing_created_date_replacing_spaces(){
   for i in "$@"; do
     if [[ -d $i ]]; then
-      echo "dir"
       the_dir="${i%/*}"
-      echo "the_dir: $the_dir"
+      echo_in_verbose_mode "the_dir: $the_dir"
       minus_spaces=$(replace_spaces_with_underscores "$the_dir");
       new_dir_name="$(file_created_date "$i")_$minus_spaces"
       new_path="$new_dir_name"
     elif [[ -f $i ]]; then
-      echo "file"
       the_file="$i"
-      echo "the_file: $the_file"
+      echo_in_verbose_mode "the_file: $the_file"
       minus_spaces=$(replace_spaces_with_underscores "$the_file");
       new_file_name="$(file_created_date "$i")_$minus_spaces"
       new_path="$new_file_name"
     fi
-    echo "new_path: '$new_path'"
-    mv "$i" "$new_path";
+    move_with_prompt "$i" "$new_path";
   done
+}
+
+function move_with_prompt(){
+    FROM="$1"
+    TO="$2"
+    echo "renaming: '$FROM' -> '$TO'"
+    if [[ PROMPT_FOR_CONFIRMATION -eq 1 ]]; then
+      echo "Perform move [y/n/a]"
+      read -r USER_INPUT;
+      case "$USER_INPUT" in
+        "a" | "A")
+          PROMPT_FOR_CONFIRMATION=0
+          ;& #Fall though
+        "y" | "Y")
+          mv "$FROM" "$TO";
+          ;;
+        *)
+          echo "Not moved."
+          ;;
+      esac
+    else
+        mv "$FROM" "$TO";
+    fi
+}
+
+# renames files/folders with <YYYY-MM-DD-original-file-name-with-spaces-replaced-with-dashes>
+function rnc(){
+  if [ "$#" -eq 0 ]; then
+    show_rename_clean_help
+  else
+    unset VERBOSE
+    unset SHOW_HELP
+    unset PREFIX_DATE
+    unset REPLACE_SPACES
+    unset PROMPT_FOR_CONFIRMATION
+    unset HAS_REQUESTED_AN_OPTION
+
+    HAS_REQUESTED_AN_OPTION=0
+    PROMPT_FOR_CONFIRMATION=0
+
+    while getopts "vrhdp" option; do
+      case $option in
+        v)
+          VERBOSE=1
+          ;;
+        r)
+          REPLACE_SPACES=1
+          HAS_REQUESTED_AN_OPTION=1
+          ;;
+        h)
+          SHOW_HELP=1
+          ;;
+        d)
+          PREFIX_DATE=1
+          HAS_REQUESTED_AN_OPTION=1
+          ;;
+        p)
+          PROMPT_FOR_CONFIRMATION=1
+          ;;
+        \?)
+          SHOW_HELP=1
+        ;;
+      esac
+    done
+
+    shift $(expr $OPTIND - 1 )  # Strip off options
+
+    if [[ $SHOW_HELP -eq 1 ]]; then
+      show_rename_clean_help
+      return 1;
+    elif [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || { [[ $REPLACE_SPACES -eq 1 ]] && [[ $PREFIX_DATE -eq 1 ]]; } ; then
+      rename_prefixing_created_date_replacing_spaces "$@"
+    elif [[ $REPLACE_SPACES -eq 1 ]]; then
+      rename_replacing_spaces "$@"
+    elif [[ $PREFIX_DATE -eq 1 ]]; then
+      rename_prefixing_created_date "$@"
+    fi
+  fi
+}
+
+function show_rename_clean_help() {
+  BOLD=$(tput bold)
+  NORM=$(tput sgr0)
+  echo -e ""
+  echo -e "${BOLD}SYNOPSIS${NORM}"
+  echo -e ""
+  echo -e "    rnc [options] <files>"
+  echo -e ""
+  echo -e "${BOLD}DESCRIPTION${NORM}"
+  echo -e ""
+  echo -e "The ${BOLD}rnc${NORM} utility renames the files passed in, replacing spaces with dashes and prefixing the creation date in YYYY-MM-DD format."
+  echo -e "If no options are passed it will do the full rename with a prompt for each file."
+  echo -e ""
+  echo -e ""
+  echo -e "    The following options are available: \n"
+  echo -e "    ${BOLD}-v${NORM}     verbose mode"
+  echo -e "    ${BOLD}-r${NORM}     replace spaces"
+  echo -e "    ${BOLD}-h${NORM}     show this help page"
+  echo -e "    ${BOLD}-d${NORM}     prefix created date"
+  echo -e "    ${BOLD}-p${NORM}     prompt before moving files\n\n"
+}
+
+function echo_in_verbose_mode() {
+  if [[ $VERBOSE -eq 1 ]]; then
+    echo -e "$1"
+  fi
 }
