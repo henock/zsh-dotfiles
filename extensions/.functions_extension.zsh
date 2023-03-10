@@ -86,8 +86,8 @@ function tre() {
     tree -aC -I '.git|node_modules|bower_components|.idea' --dirsfirst "$@" | less -FRNX;
 }
 
-function replace_spaces_with_underscores() {
-    echo "$@" | sed 's/ /_/g'
+function replace_spaces_with_dashes() {
+    echo "$@" | sed 's/ /-/g'
 }
 
 function prefix_zero_to_a_single_digit_if_needed() {
@@ -127,7 +127,8 @@ function file_created_date() {
   #The GetFileInfo command is depricated so 1st check if it still there
   command -v GetFileInfo > /dev/null 2>&1
 	if [ $? -eq 1 ]; then
-   		say "GetFileInfo not found, exiting"
+    echo "GetFileInfo not found, exiting"
+    say "GetFileInfo not found, exiting"
 		exit 1
 	fi
 
@@ -135,62 +136,53 @@ function file_created_date() {
   echo $(GetFileInfo -d "$@" | awk '{print $1}' | awk 'BEGIN { FS = "/" }; {print $3 "-"  $1 "-" $2}')
 }
 
-#Rename all files with space to have underscores instead
-function rename_replacing_spaces(){
-  for i in "$@"; do
-    minus_spaces=$(replace_spaces_with_underscores "$i");
-    move_with_prompt "$i" "$minus_spaces";
-  done
-}
-
-#Raname files to have the date of file created in yyyy-mm-dd-<file-name> format
-function rename_prefixing_created_date(){
-   for i in "$@"; do
-    new_file_name=$(file_created_date "$i")"_$i"
-    move_with_prompt "$i" "$new_file_name";
-  done
-}
-
 #Rename all files prefixing last modified date and replacing space to have _ instead
 function rename_prefixing_created_date_replacing_spaces(){
   for i in "$@"; do
-    if [[ -d $i ]]; then
-      the_dir="${i%/*}"
-      echo_in_verbose_mode "the_dir: $the_dir"
-      minus_spaces=$(replace_spaces_with_underscores "$the_dir");
-      new_dir_name="$(file_created_date "$i")_$minus_spaces"
-      new_path="$new_dir_name"
-    elif [[ -f $i ]]; then
-      the_file="$i"
-      echo_in_verbose_mode "the_file: $the_file"
-      minus_spaces=$(replace_spaces_with_underscores "$the_file");
-      new_file_name="$(file_created_date "$i")_$minus_spaces"
-      new_path="$new_file_name"
+    if [[ -d $i ]] || [[ -f $i ]]; then
+      echo_in_verbose_mode "About to move: $the_file"
+      NEW_NAME="$i"
+
+      if [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || [[ $REPLACE_SPACES -eq 1 ]] ; then
+        NEW_NAME=$(replace_spaces_with_dashes "$i");
+      fi
+
+      if [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || [[ $PREFIX_DATE -eq 1 ]]; then
+        NEW_NAME="$(file_created_date "$i")_$NEW_NAME"
+      fi
+
+      move_with_prompt "$i" "$NEW_NAME";
+    else
+      echo "Unhandled file type, skipping $i"
     fi
-    move_with_prompt "$i" "$new_path";
   done
 }
 
 function move_with_prompt(){
     FROM="$1"
     TO="$2"
-    echo "renaming: '$FROM' -> '$TO'"
-    if [[ PROMPT_FOR_CONFIRMATION -eq 1 ]]; then
-      echo "Perform move [y/n/a]"
-      read -r USER_INPUT;
-      case "$USER_INPUT" in
-        "a" | "A")
-          PROMPT_FOR_CONFIRMATION=0
-          ;& #Fall though
-        "y" | "Y")
+    if [[ "$FROM" != "$TO" ]]; then
+      echo "Rename: '$FROM' -> '$TO'?"
+      if [[ PROMPT_FOR_CONFIRMATION -eq 1 ]]; then
+        echo "Perform move [y/n/a]"
+        read -r USER_INPUT;
+        case "$USER_INPUT" in
+          "a" | "A")
+            PROMPT_FOR_CONFIRMATION=0
+            ;& #Fall though
+          "y" | "Y")
+            mv "$FROM" "$TO";
+            ;;
+          *)
+            echo "$FROM not moved."
+            ;;
+        esac
+      else
+          echo_in_verbose_mode "Renaming: '$FROM' -> '$TO'."
           mv "$FROM" "$TO";
-          ;;
-        *)
-          echo "Not moved."
-          ;;
-      esac
+      fi
     else
-        mv "$FROM" "$TO";
+      echo_in_verbose_mode "Skipping renaming: '$FROM' -> '$TO' as they are identical."
     fi
 }
 
@@ -199,6 +191,7 @@ function rnc(){
   if [ "$#" -eq 0 ]; then
     show_rename_clean_help
   else
+
     unset VERBOSE
     unset SHOW_HELP
     unset PREFIX_DATE
@@ -239,12 +232,16 @@ function rnc(){
     if [[ $SHOW_HELP -eq 1 ]]; then
       show_rename_clean_help
       return 1;
-    elif [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || { [[ $REPLACE_SPACES -eq 1 ]] && [[ $PREFIX_DATE -eq 1 ]]; } ; then
+    else
+
+
+      echo_in_verbose_mode "Calling with VERBOSE=$VERBOSE"
+      echo_in_verbose_mode "Calling with SHOW_HELP=$SHOW_HELP"
+      echo_in_verbose_mode "Calling with PREFIX_DATE=$PREFIX_DATE"
+      echo_in_verbose_mode "Calling with REPLACE_SPACES=$REPLACE_SPACES"
+      echo_in_verbose_mode "Calling with PROMPT_FOR_CONFIRMATION=$PROMPT_FOR_CONFIRMATION"
+      echo_in_verbose_mode "Calling with HAS_REQUESTED_AN_OPTION=$HAS_REQUESTED_AN_OPTION"
       rename_prefixing_created_date_replacing_spaces "$@"
-    elif [[ $REPLACE_SPACES -eq 1 ]]; then
-      rename_replacing_spaces "$@"
-    elif [[ $PREFIX_DATE -eq 1 ]]; then
-      rename_prefixing_created_date "$@"
     fi
   fi
 }
