@@ -23,6 +23,30 @@ function nvm_prompt_info() {
   echo "${ZSH_THEME_NVM_PROMPT_PREFIX}${nvm_prompt}${ZSH_THEME_NVM_PROMPT_SUFFIX}"
 }
 
+function exit_status_info() {
+    local EXIT="$?" # store current exit code
+    # start with an empty PS1
+    PS1=""
+    if [[ $EXIT -eq 0 ]]; then
+        PS1+="${GREEN}√${RESET} "      # Add green for success
+    else
+        PS1+="${RED}?️️️${EXIT}${RESET} " # Add red if exit code non 0
+    fi
+
+
+  _USERNAME="%{$fg_bold[red]%}%n%{$reset_color%}@"
+  _LIBERTY="%{$fg[green]%}$"
+if [[ $EUID -eq 0 ]]; then
+  _USERNAME="%{$fg_bold[red]%}%n%{$reset_color%}@"
+  _LIBERTY="%{$fg[red]%}#"
+else
+  _USERNAME="%{$fg_bold[white]%}%n%{$reset_color%}@"
+  _LIBERTY="%{$fg[green]%}$"
+fi
+_USERNAME="$_USERNAME%m"
+_LIBERTY="$_LIBERTY%{$reset_color%}"
+
+}
 
 bureau_git_branch () {
   ref=$(command git symbolic-ref HEAD 2> /dev/null) || \
