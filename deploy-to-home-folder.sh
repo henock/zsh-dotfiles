@@ -239,7 +239,7 @@ function show_deploy_help() {
   echo -e ""
   echo -e "${BOLD}SYNOPSIS${NORM}"
   echo -e ""
-  echo -e "    ./deploy-to-home-folder.sh [options]"
+  echo -e "    ./deploy-to-home-folder.sh [options] <project dir - defaults to current>"
   echo -e ""
   echo -e "${BOLD}DESCRIPTION${NORM}"
   echo -e ""
@@ -252,68 +252,74 @@ function show_deploy_help() {
 }
 
 
-
-
-############################################################
-#######           SCRIPT START HERE                 ########
-############################################################
-
-VERBOSE=false
-TRUE=0
-FALSE=1
-USER_ANSWER_YES=1   # Default
-USER_ANSWER_NO=2
-PROMPT_FOR_ANY_CONFIRMATIONS="$USER_ANSWER_YES"
-show_help=true
-
-while getopts "vhd" option; do
-  case $option in
-    v)
-      VERBOSE=true
-      ;;
-    h)
-      show_help=true
-      ;;
-    d)
-      show_help=false
-      ;;
-    \?)
-      show_help=true
-    ;;
-  esac
-done
-
-shift $(expr $OPTIND - 1 )  # Strip off options
-
-if [[ $show_help = true ]]; then
-  show_deploy_help
-  exit 0;
-fi
-
-# Only ever want to do this the first time
-case $0 in
-    /*|~*)
-        PROJECT_DIR="$(dirname "$0")"
+function deal_with_options() {
+  while getopts "vhd" option; do
+    case $option in
+      v)
+  echo "v"
+        VERBOSE=true
         ;;
-    *)
-        PWD="`pwd`"
-        PROJECT_DIR="$(dirname "$PWD/$0")"
+      h)
+  echo "h"
+        show_help=true
         ;;
-esac
+      d)
+  echo "d"
+        show_help=false
+        ;;
+      \?)
+  echo "?"
+        show_help=true
+      ;;
+    esac
+  done
 
-BASE_DIR="$(cd $PROJECT_DIR; pwd -P)"  # Setting BASEDIR to something like /Users/<userName>/projects/zsh-dotfiles/
+  shift $(expr $OPTIND - 1 )  # Strip off options
 
-deploy_links_and_folders
-
-setting_up_sublime_key_mappings_file
-
-
-if [ "$VERBOSE" = true ]; then
-  users_response=$(check_user_wants_to_proceed "\n\nRestart zsh to apply the .files" )
-  if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
-    echo "Exiting...  you will need to reload manually (ie. by running 'exec zsh')."
+  if [[ $show_help = true ]]; then
+    show_deploy_help
     exit 0;
   fi
-fi
+}
 
-echo -en "\n\nReloading by running 'exec zsh'\n\n" && exec zsh
+
+function set_project_dirs() {
+  PWD="`pwd`"
+  PROJECT_DIR="$(dirname "$PWD/$0")"
+  BASE_DIR="$(cd $PROJECT_DIR; pwd -P)"  # Setting BASEDIR to something like /Users/<userName>/projects/zsh-dotfiles/
+}
+
+function reload_zsh() {
+  if [ "$VERBOSE" = true ]; then
+    users_response=$(check_user_wants_to_proceed "\n\nRestart zsh to apply the .files" )
+    if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
+      echo "Exiting...  you will need to reload manually (ie. by running 'exec zsh')."
+      exit 0;
+    fi
+  fi
+
+  echo -en "\n\nReloading by running 'exec zsh'\n\n" && exec zsh
+}
+
+function run_script() {
+  VERBOSE=false
+  TRUE=0
+  FALSE=1
+  USER_ANSWER_YES=1
+  USER_ANSWER_NO=2
+  PROMPT_FOR_ANY_CONFIRMATIONS="$USER_ANSWER_YES"
+  show_help=true
+
+  deal_with_options "$@"
+  set_project_dirs "$@"
+  deploy_links_and_folders
+  reload_zsh
+  setting_up_sublime_key_mappings_file
+}
+
+
+############################################################
+#######           SCRIPT STARTS HERE                 ########
+############################################################
+
+run_script "$@"
