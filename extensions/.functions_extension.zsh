@@ -140,7 +140,7 @@ function file_created_date() {
 function rename_prefixing_created_date_replacing_spaces(){
   for i in "$@"; do
     if [[ -d $i ]] || [[ -f $i ]]; then
-      echo_in_verbose_mode "About to move: $the_file"
+      echo_in_verbose_mode "About to rename:     '$i'"
       NEW_NAME="$i"
 
       if [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || [[ $REPLACE_SPACES -eq 1 ]] ; then
@@ -151,20 +151,19 @@ function rename_prefixing_created_date_replacing_spaces(){
         NEW_NAME="$(file_created_date "$i")_$NEW_NAME"
       fi
 
-      move_with_prompt "$i" "$NEW_NAME";
+      move_file_with_prompt "$i" "$NEW_NAME";
     else
-      echo "Unhandled file type, skipping $i"
+      echo "Unhandled file type, skipping '$i'"
     fi
   done
 }
 
-function move_with_prompt(){
+function move_file_with_prompt(){
     FROM="$1"
     TO="$2"
     if [[ "$FROM" != "$TO" ]]; then
-      echo "Rename: '$FROM' -> '$TO'?"
       if [[ PROMPT_FOR_CONFIRMATION -eq 1 ]]; then
-        echo "Perform move [y/n/a]"
+        echo "Rename: '$FROM' -> '$TO' [y/n/a]?"
         read -r USER_INPUT;
         case "$USER_INPUT" in
           "a" | "A")
@@ -200,12 +199,12 @@ function rnc(){
     unset HAS_REQUESTED_AN_OPTION
 
     HAS_REQUESTED_AN_OPTION=0
-    PROMPT_FOR_CONFIRMATION=0
+    PROMPT_FOR_CONFIRMATION=1
 
     while getopts "vrhdp" option; do
       case $option in
         v)
-          VERBOSE=1
+          VERBOSE=true
           ;;
         r)
           REPLACE_SPACES=1
@@ -261,15 +260,10 @@ function show_rename_clean_help() {
   echo -e ""
   echo -e ""
   echo -e "    The following options are available: \n"
-  echo -e "    ${BOLD}-v${NORM}     verbose mode"
-  echo -e "    ${BOLD}-r${NORM}     replace spaces"
-  echo -e "    ${BOLD}-h${NORM}     show this help page"
-  echo -e "    ${BOLD}-d${NORM}     prefix created date"
+  echo -e "    ${BOLD}-h${NORM}     show this help page\n"
+  echo -e "    ${BOLD}-v${NORM}     verbose mode\n"
+  echo -e "    ${BOLD}-r${NORM}     replace spaces\n"
+  echo -e "    ${BOLD}-d${NORM}     prefix created date\n"
   echo -e "    ${BOLD}-p${NORM}     prompt before moving files\n\n"
 }
 
-function echo_in_verbose_mode() {
-  if [[ $VERBOSE -eq 1 ]]; then
-    echo -e "$1"
-  fi
-}

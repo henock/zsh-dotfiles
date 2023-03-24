@@ -7,7 +7,7 @@ alias start-minikube='minikube start --driver=virtualbox --embed-certs && eval $
 
 
 # Pod management.
-alias kgp='kubectl  get pods'
+alias kgp='kubectl get pods'
 alias kgpwide='kgp -o wide'
 alias kdp='kubectl  describe pods'
 
