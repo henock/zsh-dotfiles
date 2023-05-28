@@ -29,11 +29,11 @@ alias rd=rmdir
 # List directory contents
 alias ls='ls -G'
 
-alias l='ls -lh'
-alias lsa='ls -lah'
-alias ll='ls -lh'
-alias la='ls -lAh'
-alias ldot='ls -ld .*'
+alias l='ls -ltrh'      # ls reversed timestamp, human readable
+alias ll='ls -ltrh'
+alias lsa='ls -ltrah'
+alias la='ls -ltrah'
+alias ldot='ls -ld .*'  # show dot files only
 
 # clear the screen
 alias c='clear'
@@ -47,7 +47,7 @@ alias p="cd ~/projects"
 alias la="l -A"
 alias cl="clear && l"
 alias cla="clear && la"
-alias lsd="la | grep '^d'"
+alias lsd="la | grep '^d'"  # show directories only
 alias clsd="cla | grep '^d'"
 
 # Looking at files
@@ -65,7 +65,8 @@ alias sudo='sudo '
 alias week='date +%V'
 
 alias grep='grep --color'
-alias sgrep='grep -R -n -H -C 5 --exclude-dir={.git}'
+# grep in folders .. -R recursive subdirectories, -n preceed with line numbers, -H filename headers, -C 5 print 5 context line numbers (before/after), --exclude-dir={.git} excludes .git folder from search
+alias sgrep='grep -R -n -H -C 5 --exclude-dir=.git'
 
 #Open the current folder with Finder
 alias ofd='open_command $PWD'
