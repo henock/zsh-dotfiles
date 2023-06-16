@@ -43,9 +43,6 @@ bindkey -e
 bindkey "[D" backward-word
 bindkey "[C" forward-word
 
-### Installed for Node
-export PATH="/usr/local/opt/node@12/bin:$PATH"
-
 end_time="$(date +%s)"
 
 ## HAS TO BE THE LAST FOR IT WORK
