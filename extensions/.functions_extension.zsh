@@ -106,7 +106,7 @@ function prefix_zero_to_a_single_digit_if_needed() {
 }
 
 function get_numeric_month() {
-    case "$@"  in
+    case "$1"  in
       "Jan") echo '01';;
       "Feb") echo '02';;
       "Mar") echo '03';;
@@ -119,12 +119,12 @@ function get_numeric_month() {
       "Oct") echo '10';;
       "Nov") echo '11';;
       "Dec") echo '12';;
-      *) echo "Unexpected_month_for_$@";;
+      *) echo "'$1' cant be converted to a month expected [Jan..Dec]";;
     esac
 }
 
 function file_created_date() {
-  #The GetFileInfo command is depricated so 1st check if it still there
+  #The GetFileInfo command is deprecated so 1st check if it still there
   command -v GetFileInfo > /dev/null 2>&1
 	if [ $? -eq 1 ]; then
     echo "GetFileInfo not found, exiting"
@@ -133,7 +133,7 @@ function file_created_date() {
 	fi
 
 	#Output of GetFileInfo is in US date format
-  echo $(GetFileInfo -d "$@" | awk '{print $1}' | awk 'BEGIN { FS = "/" }; {print $3 "-"  $1 "-" $2}')
+  echo $(GetFileInfo -d "$@" | awk '{print $1}' | awk 'BEGIN { FS = "/" }; {print $3 "."  $1 "." $2}')
 }
 
 #Rename all files prefixing last modified date and replacing space to have _ instead

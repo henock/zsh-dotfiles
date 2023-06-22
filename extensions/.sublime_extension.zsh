@@ -27,8 +27,6 @@ else
 	echo "================================================================================"
 	echo "|     Sublime not found on the system - you will need to install it first!     |"
 	echo "================================================================================"
-	echo "sleeping for 3"
-	sleep 3
 fi
 
 
