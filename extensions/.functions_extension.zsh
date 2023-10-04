@@ -48,7 +48,6 @@ fi
 
 
 function watch() {
-  echo "$#"
   if [ $# -ne 2 ]; then
     echo -e "\n\nUsage  :  watch <sleep seconds> <command>\n\n"
     echo -e "examples   :  watch 2 ls"
@@ -67,11 +66,11 @@ function watch() {
 
 function dos2unix() {
   if [[ $# -eq 0 ]]; then
-    echo -e "\nUsage: dos-to-unix <input-file> [output-file]\n"
-    echo -e 'if the $2 is omitted then;  $1 convert  "$1-dos-to-unix-step" && mv "$1-dos-to-unix-step" $1'
+    echo -e "\nUsage: dos2unix <input-file> [output-file]\n"
+    echo -e 'if the [output-file] is omitted then;  $1 convert  "$1.dos-to-unix-step" && mv "$1.dos-to-unix-step" $1'
   elif [[ $# -eq 1 ]]; then
-    DOS_TO_UNIS_STEP_FILE="$1.dos_to_unix_step"
-    cat "$1" | awk '{ sub ("\r$", "" ); print }' > "$DOS_TO_UNIS_STEP_FILE" && mv "$DOS_TO_UNIS_STEP_FILE" "$1"
+    local dos_to_unis_step_file="$1.dos-to-unix-step"
+    cat "$1" | awk '{ sub ("\r$", "" ); print }' > "$dos_to_unis_step_file" && mv "$dos_to_unis_step_file" "$1"
   elif [[ $# -eq 2 ]]; then
     cat "$1" | awk '{ sub ("\r$", "" ); print }' > $2
   fi
@@ -141,17 +140,17 @@ function rename_prefixing_created_date_replacing_spaces(){
   for i in "$@"; do
     if [[ -d $i ]] || [[ -f $i ]]; then
       echo_in_verbose_mode "About to rename:     '$i'"
-      NEW_NAME="$i"
+      local new_name="$i"
 
       if [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || [[ $REPLACE_SPACES -eq 1 ]] ; then
-        NEW_NAME=$(replace_spaces_with_dashes "$i");
+        new_name=$(replace_spaces_with_dashes "$i");
       fi
 
       if [[ $HAS_REQUESTED_AN_OPTION -eq 0 ]] || [[ $PREFIX_DATE -eq 1 ]]; then
-        NEW_NAME="$(file_created_date "$i")_$NEW_NAME"
+        new_name="$(file_created_date "$i")_$new_name"
       fi
 
-      move_file_with_prompt "$i" "$NEW_NAME";
+      move_file_with_prompt "$i" "$new_name";
     else
       echo "Unhandled file type, skipping '$i'"
     fi
@@ -159,33 +158,34 @@ function rename_prefixing_created_date_replacing_spaces(){
 }
 
 function move_file_with_prompt(){
-    FROM="$1"
-    TO="$2"
-    if [[ "$FROM" != "$TO" ]]; then
+    local from_path="$1"
+    local to_path="$2"
+    local user_input
+    if [[ "$from_path" != "$to_path" ]]; then
       if [[ PROMPT_FOR_CONFIRMATION -eq 1 ]]; then
-        echo "Rename: '$FROM' -> '$TO' [y/n/a]?"
-        read -r USER_INPUT;
-        case "$USER_INPUT" in
+        echo "Rename: '$from_path' -> '$to_path' [y/n/a]?"
+        read -r user_input;
+        case "$user_input" in
           "a" | "A")
             PROMPT_FOR_CONFIRMATION=0
             ;& #Fall though
           "y" | "Y")
-            mv "$FROM" "$TO";
+            mv "$from_path" "$to_path";
             ;;
           *)
-            echo "$FROM not moved."
+            echo "$from_path not moved."
             ;;
         esac
       else
-          echo_in_verbose_mode "Renaming: '$FROM' -> '$TO'."
-          mv "$FROM" "$TO";
+          echo_in_verbose_mode "Renaming: '$from_path' -> '$to_path'."
+          mv "$from_path" "$to_path";
       fi
     else
-      echo_in_verbose_mode "Skipping renaming: '$FROM' -> '$TO' as they are identical."
+      echo_in_verbose_mode "Skipping renaming: '$from_path' -> '$to_path' as they are identical."
     fi
 }
 
-# renames files/folders with <YYYY-MM-DD-original-file-name-with-spaces-replaced-with-dashes>
+# renames files/folders with <YYYY-MM-DD-original-file-name-with-spaces-replaced-by-dashes>
 function rnc(){
   if [ "$#" -eq 0 ]; then
     show_rename_clean_help
@@ -246,24 +246,24 @@ function rnc(){
 }
 
 function show_rename_clean_help() {
-  BOLD=$(tput bold)
-  NORM=$(tput sgr0)
+  local bold_font=$(tput bold)
+  local normal_font=$(tput sgr0)
   echo -e ""
-  echo -e "${BOLD}SYNOPSIS${NORM}"
+  echo -e "${bold_font}SYNOPSIS${normal_font}"
   echo -e ""
   echo -e "    rnc [options] <files>"
   echo -e ""
-  echo -e "${BOLD}DESCRIPTION${NORM}"
+  echo -e "${bold_font}DESCRIPTION${normal_font}"
   echo -e ""
-  echo -e "The ${BOLD}rnc${NORM} utility renames the files passed in, replacing spaces with dashes and prefixing the creation date in YYYY-MM-DD format."
+  echo -e "The ${bold_font}rnc${normal_font} utility renames the files passed in, replacing spaces with dashes and prefixing the creation date in YYYY-MM-DD format."
   echo -e "If no options are passed it will do the full rename with a prompt for each file."
   echo -e ""
   echo -e ""
   echo -e "    The following options are available: \n"
-  echo -e "    ${BOLD}-h${NORM}     show this help page\n"
-  echo -e "    ${BOLD}-v${NORM}     verbose mode\n"
-  echo -e "    ${BOLD}-r${NORM}     replace spaces\n"
-  echo -e "    ${BOLD}-d${NORM}     prefix created date\n"
-  echo -e "    ${BOLD}-p${NORM}     prompt before moving files\n\n"
+  echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
+  echo -e "    ${bold_font}-v${normal_font}     verbose mode\n"
+  echo -e "    ${bold_font}-r${normal_font}     replace spaces\n"
+  echo -e "    ${bold_font}-d${normal_font}     prefix created date\n"
+  echo -e "    ${bold_font}-p${normal_font}     prompt before moving files\n\n"
 }
 

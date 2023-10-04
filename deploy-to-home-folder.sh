@@ -16,19 +16,21 @@ source extensions/.utils.zsh
 
 function upsert_symlink() {
   #  Symlink can't simply be overwritten, we first remove the one present before we can link a new file.
-  TARGET_FILE=$1
-  SOURCE_FILE=$2
+  local target_file=$1
+  local source_file=$2
   
-  if [ -f "$TARGET_FILE" ] || [ -h "$TARGET_FILE" ]; then
-    echo_in_verbose_mode "Removing file: $TARGET_FILE"
-    rm "$TARGET_FILE"
+  if [ -f "$target_file" ] || [ -h "$target_file" ]; then
+    echo_in_verbose_mode "Removing file: $target_file"
+    rm "$target_file"
   fi
-  echo_in_verbose_mode "Creating the link $TARGET_FILE -> $SOURCE_FILE"
-  ln -s "$SOURCE_FILE" "$TARGET_FILE"
+  echo_in_verbose_mode "Creating the link $target_file -> $source_file"
+  ln -s "$source_file" "$target_file"
 }
 
 function check_with_user_and_remove() {
-  target_file="$1"
+  local target_file="$1"
+  local users_response
+  local ls_of_target_file
   if [ -e "$target_file" ]; then
     ls_of_target_file="\n\n$(ls -la $1)\n\n"
     if [ -d "$target_file" ]; then
@@ -54,39 +56,40 @@ function check_with_user_and_remove() {
 }
 
 function check_with_user_and_backup_file() {
-  target_file="$1"
+  local target_file="$1"
   if [ -e "$target_file" ]; then
-    ls_of_target_file="\n\n$(ls -la $1)\n\n"
+    local ls_of_target_file="\n\n$(ls -la $1)\n\n"
     if  [ -f "$target_file" ]; then
-      BACK_UP_NAME_EXTENSION=$(short_date)
-      BACK_UP_FILE="$target_file.bak.$BACK_UP_NAME_EXTENSION"
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to backup $ls_of_target_file to $BACK_UP_FILE)"
+      local back_up_name_extension=$(short_date)
+      local back_up_file="$target_file.bak.$back_up_name_extension"
+      local users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to backup $ls_of_target_file to $back_up_file)"
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
-        echo_in_verbose_mode "Backing up file $target_file to $BACK_UP_FILE"
-        cp "$target_file" "$BACK_UP_FILE"
+        echo_in_verbose_mode "Backing up file $target_file to $back_up_file"
+        cp "$target_file" "$back_up_file"
       fi
     fi
   fi
 }
 
 function display_file_and_its_existence(){
-  FILE="$1"
+  local file="$1"
+  local file_prefix_comment
   if [ "$#" -eq 2 ]; then
-    FILE_PREFIX_COMMENT="$2"
+    file_prefix_comment="$2"
   else
-    FILE_PREFIX_COMMENT=""
+    file_prefix_comment=""
   fi
-  EXISTENCE=" (exists)"
-  if [ ! -e "$FILE" ]; then
-    EXISTENCE=" (Doesn't exist and will be created)"
+  local existence=" (exists)"
+  if [ ! -e "$file" ]; then
+    existence=" (Doesn't exist and will be created)"
   fi
-  echo "$FILE_PREFIX_COMMENT $FILE $EXISTENCE"
+  echo "$file_prefix_comment $file $existence"
 }
 
 function create_folder_if_it_does_exist() {
-  FOLDER="$1"
-  if [ ! -d "$FOLDER" ]; then
-    mkdir "$FOLDER"
+  local folder="$1"
+  if [ ! -d "$folder" ]; then
+    mkdir "$folder"
   fi
 }
 
@@ -99,11 +102,11 @@ function check_user_wants_to_proceed_allow_for_default() {
   fi
 }
 function check_user_wants_to_proceed() {
-  PROMPT=$@
-  echo -e "$PROMPT [y/n]: "  > /dev/tty
-  read -r USER_ANSWER
+  local prompt=$@
+  echo -e "$prompt [y/n]: "  > /dev/tty
+  read -r user_answer
 
-  if [[ "y" == "$USER_ANSWER" ]]; then
+  if [[ "y" == "$user_answer" ]]; then
     echo "$USER_ANSWER_YES";
   else
     echo "$USER_ANSWER_NO";
@@ -114,38 +117,38 @@ function check_user_wants_to_proceed() {
 
 function deploy_links_and_folders() {
 
-  PLUGINS_DIR="$BASE_DIR/plugins"
-  EXTENSIONS_DIR="$BASE_DIR/extensions/"
-  VIM_FILES_DIR="$BASE_DIR/vim-files-for-users-home-dir/"
-  VIM_FOLDERS="$BASE_DIR/vim-folders"
-  SYNTAX_HIGHLIGHTING_FILE=".zsh-syntax-highlighting.zsh"
-  ZSHRC_FILES_DIR="$BASE_DIR/zshrc-files-for-users-home-dir/"
+  local plugins_dir="$BASE_DIR/plugins"
+  local extensions_dir="$BASE_DIR/extensions/"
+  local vim_files_dir="$BASE_DIR/vim-files-for-users-home-dir/"
+  local vim_folders="$BASE_DIR/vim-folders"
+  local syntax_highlighting_file=".zsh-syntax-highlighting.zsh"
+  local zshrc_files_dir="$BASE_DIR/zshrc-files-for-users-home-dir/"
 
-  SYNTAX_HIGHLIGHTING_FILE_IN_PROJECT_DIR="$PLUGINS_DIR/$SYNTAX_HIGHLIGHTING_FILE"
+  local syntax_highlighting_file_in_project_dir="$plugins_dir/$syntax_highlighting_file"
 
-  VIM_DIR_IN_HOME="$HOME/.vim"
-  PLUGIN_DIR_IN_HOME="$HOME/.zsh_plugins"
-  EXTENSIONS_DIR_IN_HOME="$HOME/.zsh_extensions"
-  ZSHRC_FILE_IN_HOME_DIR="$HOME/.zshrc"
-  SYNTAX_HIGHLIGHTING_FILE_IN_HOME_DIR="$PLUGIN_DIR_IN_HOME/$SYNTAX_HIGHLIGHTING_FILE"
+  local vim_dir_in_home="$HOME/.vim"
+  local plugin_dir_in_home="$HOME/.zsh_plugins"
+  local extensions_dir_in_home="$HOME/.zsh_extensions"
+  local zshrc_file_in_home_dir="$HOME/.zshrc"
+  local syntax_highlighting_file_in_home_dir="$plugin_dir_in_home/$syntax_highlighting_file"
 
   echo -e "\n\n"
   echo -e "Source files/folder...\n"
   echo "BASE_DIR                                : $BASE_DIR";
-  echo "PLUGINS_DIR                             : $PLUGINS_DIR";
-  echo "VIM_FILES_DIR                           : $VIM_FILES_DIR";
-  echo "VIM_FOLDERS                             : $VIM_FOLDERS";
-  echo "EXTENSIONS_DIR                          : $EXTENSIONS_DIR";
-  echo "ZSHRC_FILES_DIR                         : $ZSHRC_FILES_DIR";
-  echo "SYNTAX_HIGHLIGHTING_FILE_IN_PROJECT_DIR : $SYNTAX_HIGHLIGHTING_FILE_IN_PROJECT_DIR";
+  echo "plugins_dir                             : $plugins_dir";
+  echo "vim_files_dir                           : $vim_files_dir";
+  echo "vim_folders                             : $vim_folders";
+  echo "extensions_dir                          : $extensions_dir";
+  echo "zshrc_files_dir                         : $zshrc_files_dir";
+  echo "syntax_highlighting_file_in_project_dir : $syntax_highlighting_file_in_project_dir";
 
   echo -e "\nTarget files/folder...\n"
 
-  display_file_and_its_existence "$VIM_DIR_IN_HOME" "VIM_DIR_IN_HOME                         : "
-  display_file_and_its_existence "$PLUGIN_DIR_IN_HOME" "PLUGIN_DIR_IN_HOME                      : "
-  display_file_and_its_existence "$EXTENSIONS_DIR_IN_HOME" "EXTENSIONS_DIR_IN_HOME                  : "
-  display_file_and_its_existence "$ZSHRC_FILE_IN_HOME_DIR" "ZSHRC_FILE_IN_HOME_DIR                  : "
-  display_file_and_its_existence "$SYNTAX_HIGHLIGHTING_FILE_IN_HOME_DIR" "SYNTAX_HIGHLIGHTING_FILE_IN_HOME_DIR    : "
+  display_file_and_its_existence "$vim_dir_in_home" "vim_dir_in_home                         : "
+  display_file_and_its_existence "$plugin_dir_in_home" "plugin_dir_in_home                      : "
+  display_file_and_its_existence "$extensions_dir_in_home" "extensions_dir_in_home                  : "
+  display_file_and_its_existence "$zshrc_file_in_home_dir" "zshrc_file_in_home_dir                  : "
+  display_file_and_its_existence "$syntax_highlighting_file_in_home_dir" "syntax_highlighting_file_in_home_dir    : "
 
   echo -e "\n"
 
@@ -166,83 +169,83 @@ function deploy_links_and_folders() {
   fi
 
 
-  check_with_user_and_remove "$VIM_DIR_IN_HOME"
-  check_with_user_and_remove "$PLUGIN_DIR_IN_HOME"
-  check_with_user_and_remove "$EXTENSIONS_DIR_IN_HOME"
+  check_with_user_and_remove "$vim_dir_in_home"
+  check_with_user_and_remove "$plugin_dir_in_home"
+  check_with_user_and_remove "$extensions_dir_in_home"
 
-  check_with_user_and_backup_file "$ZSHRC_FILE_IN_HOME_DIR"
-  check_with_user_and_remove "$SYNTAX_HIGHLIGHTING_FILE_IN_HOME_DIR"
+  check_with_user_and_backup_file "$zshrc_file_in_home_dir"
+  check_with_user_and_remove "$syntax_highlighting_file_in_home_dir"
 
   echo -e "\nDeploying .zshrc and all my extension files...\n"
 
-  create_folder_if_it_does_exist "$PLUGIN_DIR_IN_HOME"
-  create_folder_if_it_does_exist "$EXTENSIONS_DIR_IN_HOME"
-  create_folder_if_it_does_exist "$VIM_DIR_IN_HOME"
-  create_folder_if_it_does_exist "$VIM_DIR_IN_HOME/backups"
-  create_folder_if_it_does_exist "$VIM_DIR_IN_HOME/swaps"
-  create_folder_if_it_does_exist "$VIM_DIR_IN_HOME/undo"
-  create_folder_if_it_does_exist "$VIM_DIR_IN_HOME/colors"
-  create_folder_if_it_does_exist "$VIM_DIR_IN_HOME/syntax"
+  create_folder_if_it_does_exist "$plugin_dir_in_home"
+  create_folder_if_it_does_exist "$extensions_dir_in_home"
+  create_folder_if_it_does_exist "$vim_dir_in_home"
+  create_folder_if_it_does_exist "$vim_dir_in_home/backups"
+  create_folder_if_it_does_exist "$vim_dir_in_home/swaps"
+  create_folder_if_it_does_exist "$vim_dir_in_home/undo"
+  create_folder_if_it_does_exist "$vim_dir_in_home/colors"
+  create_folder_if_it_does_exist "$vim_dir_in_home/syntax"
 
-  symlink_files_in_folder "$ZSHRC_FILES_DIR" "$HOME" "$TRUE"
-  symlink_files_in_folder "$VIM_FILES_DIR" "$HOME" "$TRUE"
-  symlink_files_in_folder "$EXTENSIONS_DIR" "$EXTENSIONS_DIR_IN_HOME" "$TRUE"
-  symlink_files_in_folder "$VIM_FOLDERS/colors" "$VIM_DIR_IN_HOME/colors" "$FALSE"
-  symlink_files_in_folder "$VIM_FOLDERS/syntax" "$VIM_DIR_IN_HOME/syntax" "$FALSE"
+  symlink_files_in_folder "$zshrc_files_dir" "$HOME" "$TRUE"
+  symlink_files_in_folder "$vim_files_dir" "$HOME" "$TRUE"
+  symlink_files_in_folder "$extensions_dir" "$extensions_dir_in_home" "$TRUE"
+  symlink_files_in_folder "$vim_folders/colors" "$vim_dir_in_home/colors" "$FALSE"
+  symlink_files_in_folder "$vim_folders/syntax" "$vim_dir_in_home/syntax" "$FALSE"
 
-  upsert_symlink "$SYNTAX_HIGHLIGHTING_FILE_IN_HOME_DIR" "$PLUGINS_DIR/zsh-syntax-highlighting.zsh"
+  upsert_symlink "$syntax_highlighting_file_in_home_dir" "$plugins_dir/zsh-syntax-highlighting.zsh"
 }
 
 
 function symlink_files_in_folder() {
-  SOURCE_DIR="$1"
-  DESTINATION_DIR="$2"
-  DOT_FILES="$3"
-  SOURCE_PATH="$SOURCE_DIR/*"
-  create_folder_if_it_does_exist "$DESTINATION_DIR"
-  if [ "$DOT_FILES" -eq "$TRUE" ]; then
-    SOURCE_PATH="$SOURCE_DIR.*"
+  local source_dir="$1"
+  local destination_dir="$2"
+  local dot_files="$3"
+  local source_path="$source_dir/*"
+  create_folder_if_it_does_exist "$destination_dir"
+  if [ "$dot_files" -eq "$TRUE" ]; then
+    source_path="$source_dir.*"
   fi
-  echo -e "\nSymlinking files in folder: $SOURCE_PATH -> $DESTINATION_DIR"
-  for i in $SOURCE_PATH ; do
+  echo -e "\nSymlinking files in folder: $source_path -> $destination_dir"
+  for i in $source_path ; do
     [ ! -f $i ]  && continue    # Ignore anything that is not a file
-    SOURCE_DIR=`dirname $i`
-    DOT_FILE=`basename $i`
-    SOURCE_FILE="$SOURCE_DIR/$DOT_FILE"
-    TARGET_FILE="$DESTINATION_DIR/$DOT_FILE"
-    echo_in_verbose_mode -e "        Symliking file: $SOURCE_FILE -> $TARGET_FILE"
-    upsert_symlink "$TARGET_FILE" "$SOURCE_FILE"
+    source_dir=`dirname $i`
+    local dot_file=`basename $i`
+    local source_file="$source_dir/$dot_file"
+    local target_file="$destination_dir/$dot_file"
+    echo_in_verbose_mode -e "        Symliking file: $source_file -> $target_file"
+    upsert_symlink "$target_file" "$source_file"
   done
 }
 
 
 function setting_up_sublime_key_mappings_file() {
   set +e #Temprarily allow a command to fail without exiting the script.
-  SUBLIME_KEYMAP_DIR=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
+  local sublime_keymap_dir=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
   set -e
-  if [[ -d "$SUBLIME_KEYMAP_DIR" ]]; then
+  if [[ -d "$sublime_keymap_dir" ]]; then
     set +e #Temprarily allow a command to fail without exiting the script.
-    SUBLIME_KEYMAP_FILE=$(find "$SUBLIME_KEYMAP_DIR" |  grep '/Default (OSX).sublime-keymap$')
+    local sublime_keymap_file=$(find "$sublime_keymap_dir" |  grep '/Default (OSX).sublime-keymap$')
     set -e
-    MY_SUBLIME_KEYMAP_FILE="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
-    PERFORM_COPY=-1
-    if [ -f "$SUBLIME_KEYMAP_FILE" ]; then
-      if ! diff "$SUBLIME_KEYMAP_FILE" "$MY_SUBLIME_KEYMAP_FILE"; then
-        BACK_UP_NAME_EXTENSION=$(short_date)
-        BACK_UP_FILE="$SUBLIME_KEYMAP_FILE.bak-$BACK_UP_NAME_EXTENSION"
-        echo "Found a sublime keymap file different to mine (above is the difference) backed it up to $BACK_UP_FILE"
-        mv "$SUBLIME_KEYMAP_FILE" "$BACK_UP_FILE"
+    local my_sublime_keymap_file="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
+    local perform_copy=-1
+    if [ -f "$sublime_keymap_file" ]; then
+      if ! diff "$sublime_keymap_file" "$my_sublime_keymap_file"; then
+        local back_up_name_extension=$(short_date)
+        local back_up_file="$sublime_keymap_file.bak-$back_up_name_extension"
+        echo "Found a sublime keymap file different to mine (above is the difference) backed it up to $back_up_file"
+        mv "$sublime_keymap_file" "$back_up_file"
         echo "And replacing it with mine"
-        PERFORM_COPY=0
+        perform_copy=0
       fi
     else
       echo "Sublime keymap not found, copying in mine"
-      PERFORM_COPY=0
+      perform_copy=0
     fi
 
-    if [ "$PERFORM_COPY" -eq 0 ]; then
-      echo "Copying $MY_SUBLIME_KEYMAP_FILE to $SUBLIME_KEYMAP_DIR"
-      cp "$MY_SUBLIME_KEYMAP_FILE" "$SUBLIME_KEYMAP_DIR"
+    if [ "$perform_copy" -eq 0 ]; then
+      echo "Copying $my_sublime_keymap_file to $sublime_keymap_dir"
+      cp "$my_sublime_keymap_file" "$sublime_keymap_dir"
     fi
   else
     echo "Sublime folder not found, not setting the keymap file."
@@ -250,21 +253,21 @@ function setting_up_sublime_key_mappings_file() {
 }
 
 function show_deploy_help() {
-  BOLD=$(tput bold)
-  NORM=$(tput sgr0)
+  local bold=$(tput bold)
+  local norm=$(tput sgr0)
   echo -e ""
-  echo -e "${BOLD}SYNOPSIS${NORM}"
+  echo -e "${bold}SYNOPSIS${norm}"
   echo -e ""
   echo -e "    ./deploy-to-home-folder.sh [options] <project dir - defaults to current>"
   echo -e ""
-  echo -e "${BOLD}DESCRIPTION${NORM}"
+  echo -e "${bold}DESCRIPTION${norm}"
   echo -e ""
-  echo -e "The ${BOLD}deploy-to-home-folder.sh${NORM} script deploys the .zsh-dotfiles to your home folder. Replacing respective files and folders."
+  echo -e "The ${bold}deploy-to-home-folder.sh${norm} script deploys the .zsh-dotfiles to your home folder. Replacing respective files and folders."
   echo -e ""
   echo -e "    The following options are available: \n"
-  echo -e "    ${BOLD}-h${NORM}     show this help page\n"
-  echo -e "    ${BOLD}-v${NORM}     verbose mode\n"
-  echo -e "    ${BOLD}-d${NORM}     deploy files\n"
+  echo -e "    ${bold}-h${norm}     show this help page\n"
+  echo -e "    ${bold}-v${norm}     verbose mode\n"
+  echo -e "    ${bold}-d${norm}     deploy files\n"
 }
 
 
