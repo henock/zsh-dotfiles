@@ -27,34 +27,6 @@ function upsert_symlink() {
   ln -s "$source_file" "$target_file"
 }
 
-function check_with_user_and_remove() {
-  local target_file="$1"
-  local users_response
-  local ls_of_target_file
-  if [ -e "$target_file" ]; then
-    ls_of_target_file="\n\n$(ls -la $1)\n\n"
-    if [ -d "$target_file" ]; then
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to delete the directory $target_file and all its contents)"
-      if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
-        echo_in_verbose_mode "Deleting dir: $target_file"
-        rm -rf "$target_file"
-      fi
-    elif  [ -h "$target_file" ]; then
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to unlink $ls_of_target_file)"
-      if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
-        echo_in_verbose_mode "Unlinking: $target_file"
-        unlink "$target_file"
-      fi
-    elif  [ -f "$target_file" ]; then
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to delete $ls_of_target_file)"
-      if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
-        echo_in_verbose_mode "Deleting file $target_file"
-        rm "$target_file"
-      fi
-    fi
-  fi
-}
-
 function check_with_user_and_backup_file() {
   local target_file="$1"
   if [ -e "$target_file" ]; then
@@ -92,28 +64,6 @@ function create_folder_if_it_does_exist() {
     mkdir "$folder"
   fi
 }
-
-function check_user_wants_to_proceed_allow_for_default() {
-  if [[ "$PROMPT_FOR_ANY_CONFIRMATIONS" -eq "$USER_ANSWER_YES" ]]; then
-    users_response=$(check_user_wants_to_proceed "$@")
-    echo "$users_response"
-  else
-    echo "$USER_ANSWER_YES"
-  fi
-}
-function check_user_wants_to_proceed() {
-  local prompt=$@
-  echo -e "$prompt [y/n]: "  > /dev/tty
-  read -r user_answer
-
-  if [[ "y" == "$user_answer" ]]; then
-    echo "$USER_ANSWER_YES";
-  else
-    echo "$USER_ANSWER_NO";
-  fi
-}
-
-
 
 function deploy_links_and_folders() {
 
