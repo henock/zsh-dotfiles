@@ -53,6 +53,22 @@ function check_with_user_and_remove() {
   fi
 }
 
+function check_with_user_and_backup_file() {
+  target_file="$1"
+  if [ -e "$target_file" ]; then
+    ls_of_target_file="\n\n$(ls -la $1)\n\n"
+    if  [ -f "$target_file" ]; then
+      BACK_UP_NAME_EXTENSION=$(short_date)
+      BACK_UP_FILE="$target_file.bak.$BACK_UP_NAME_EXTENSION"
+      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to backup $ls_of_target_file to $BACK_UP_FILE)"
+      if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
+        echo_in_verbose_mode "Backing up file $target_file to $BACK_UP_FILE"
+        cp "$target_file" "$BACK_UP_FILE"
+      fi
+    fi
+  fi
+}
+
 function display_file_and_its_existence(){
   FILE="$1"
   if [ "$#" -eq 2 ]; then
@@ -154,7 +170,7 @@ function deploy_links_and_folders() {
   check_with_user_and_remove "$PLUGIN_DIR_IN_HOME"
   check_with_user_and_remove "$EXTENSIONS_DIR_IN_HOME"
 
-  check_with_user_and_remove "$ZSHRC_FILE_IN_HOME_DIR"
+  check_with_user_and_backup_file "$ZSHRC_FILE_IN_HOME_DIR"
   check_with_user_and_remove "$SYNTAX_HIGHLIGHTING_FILE_IN_HOME_DIR"
 
   echo -e "\nDeploying .zshrc and all my extension files...\n"
@@ -212,7 +228,7 @@ function setting_up_sublime_key_mappings_file() {
     PERFORM_COPY=-1
     if [ -f "$SUBLIME_KEYMAP_FILE" ]; then
       if ! diff "$SUBLIME_KEYMAP_FILE" "$MY_SUBLIME_KEYMAP_FILE"; then
-        BACK_UP_NAME_EXTENSION="$(date | sed 's/ /_/g')"
+        BACK_UP_NAME_EXTENSION=$(short_date)
         BACK_UP_FILE="$SUBLIME_KEYMAP_FILE.bak-$BACK_UP_NAME_EXTENSION"
         echo "Found a sublime keymap file different to mine (above is the difference) backed it up to $BACK_UP_FILE"
         mv "$SUBLIME_KEYMAP_FILE" "$BACK_UP_FILE"
