@@ -1,12 +1,6 @@
 
 
 
-#Maven
-alias mci='mvn clean install'
-alias mci-t='mvn clean install -Dmaven.test.skip=true'
-alias mct='mvn clean test'
-
-
 
 # IP addresses
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -27,7 +21,7 @@ command -v md5sum > /dev/null || alias md5sum="md5"
 command -v sha1sum > /dev/null || alias sha1sum="shasum"
 
 # Trim new lines and copy to clipboard
-alias copy="tr -d '\n' | pbcopy"
+alias pbcopy-l="tr -d '\n' | pbcopy"
 
 # Recursively delete `.DS_Store` files
 alias cleanup-ds-store-files="find . -type f -name '*.DS_Store' -ls -delete"

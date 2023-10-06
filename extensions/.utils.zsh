@@ -1,8 +1,7 @@
 #! /bin/bash
-set -eu
 
 function check_user_wants_to_proceed_allow_for_default() {
-  if [[ "$PROMPT_FOR_ANY_CONFIRMATIONS" -eq "$USER_ANSWER_YES" ]]; then
+  if [[ "$SILENT" = false || "$VERBOSE" = true  ]]; then
     users_response=$(check_user_wants_to_proceed "$@")
     echo "$users_response"
   else
@@ -11,14 +10,18 @@ function check_user_wants_to_proceed_allow_for_default() {
 }
 
 function check_user_wants_to_proceed() {
-  local prompt=$@
-  echo -e "$prompt [y/n]: "  > /dev/tty
-  read -r user_answer
+  if [[ "$SILENT" = false ]]; then
+    local prompt=$@
+    echo -e "$prompt [y/n]: "  > /dev/tty
+    read -r user_answer
 
-  if [[ "y" == "$user_answer" ]]; then
-    echo "$USER_ANSWER_YES";
+    if [[ "y" == "$user_answer" ]]; then
+      echo "$USER_ANSWER_YES";
+    else
+      echo "$USER_ANSWER_NO";
+    fi
   else
-    echo "$USER_ANSWER_NO";
+    echo "$USER_ANSWER_YES";
   fi
 }
 
@@ -52,7 +55,7 @@ function check_with_user_and_remove() {
 
 
 function echo_in_verbose_mode() {
-  if [[ "$VERBOSE" = true ]]; then
+  if [[ -z "${VERBOSE+x}" && "$VERBOSE" = true ]]; then
     echo -e "$1"
   fi
 }

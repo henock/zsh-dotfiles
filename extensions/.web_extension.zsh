@@ -50,7 +50,7 @@ alias scholar='web_search scholar'
 alias wiki='web_search duckduckgo \!w'
 alias news='web_search duckduckgo \!n'
 alias youtube='web_search duckduckgo \!yt'
-alias map='web_search duckduckgo \!m'
+alias wmap='web_search duckduckgo \!m'
 alias image='web_search duckduckgo \!i'
 alias ducky='web_search duckduckgo \!'
 

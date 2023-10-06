@@ -61,9 +61,10 @@ set number
 syntax on
 
 " Highlight current line
-set cursorline
+"set cursorline
+
 " Set the colour on the cursorline
-highlight  CursorLine ctermbg=Black ctermfg=None
+" highlight  CursorLine ctermbg=White ctermfg=None
 
 " Expand tabs
 set expandtab

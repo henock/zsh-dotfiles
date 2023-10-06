@@ -1,8 +1,11 @@
 # copied from oh-my-zsh/directories and change to my liking.
 
 # Changing/making/removing directory
+# the directory stack is updated automatically whenever you change directories using the cd command
 setopt auto_pushd
+# means that the pushd command ignores duplicate directory entries on the directory stack.
 setopt pushd_ignore_dups
+# When pushdminus is enabled, the pushd command will interpret a leading "-" character as a directory name, rather than a request to move up one directory.
 setopt pushdminus
 
 # alias -g ... means that its a global alias (and therefore can be used with pipe command.. eg: cat file.txt | grep bob | .../bobs.txt )
@@ -65,7 +68,7 @@ alias sudo='sudo '
 alias week='date +%V'
 
 alias grep='grep --color'
-# grep in folders .. -R recursive subdirectories, -n preceed with line numbers, -H filename headers, -C 5 print 5 context line numbers (before/after), --exclude-dir={.git} excludes .git folder from search
+# grep in folders .. -R recursive subdirectories, -n precede with line numbers, -H filename headers, -C 5 print 5 context line numbers (before/after), --exclude-dir={.git} excludes .git folder from search
 alias sgrep='grep -R -n -H -C 5 --exclude-dir=.git'
 
 #Open the current folder with Finder

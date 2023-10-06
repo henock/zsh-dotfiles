@@ -1,5 +1,4 @@
 #! /bin/bash
-set -eu
 
 source extensions/.utils.zsh
 
@@ -28,7 +27,8 @@ function show_undeploy_help() {
   echo -e ""
   echo -e "    The following options are available: \n"
   echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
-  echo -e "    ${bold_font}-v${normal_font}     verbose mode\n"
+  echo -e "    ${bold_font}-v${normal_font}     verbose mode (takes precedence over silent mode)\n"
+  echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
   echo -e "    ${bold_font}-u${normal_font}     undeploy files\n"
 }
 
@@ -36,7 +36,7 @@ function show_undeploy_help() {
 
 
 function deal_with_undeploy_options() {
-  while getopts "vhu" option; do
+  while getopts "vhuS" option; do
     case $option in
       v)
         VERBOSE=true
@@ -46,6 +46,10 @@ function deal_with_undeploy_options() {
         ;;
       u)
         show_help=false
+        ;;
+      S)
+        show_help=false
+        SILENT=true
         ;;
       \?)
         show_help=true
@@ -65,15 +69,16 @@ function deal_with_undeploy_options() {
 
 function run_script() {
   VERBOSE=false
+  SILENT=false
   TRUE=0
   FALSE=1
   USER_ANSWER_YES=1
   USER_ANSWER_NO=2
-  PROMPT_FOR_ANY_CONFIRMATIONS="$USER_ANSWER_YES"
   show_help=true
 
   deal_with_undeploy_options "$@"
   undeploy_zsh_dot_files
+  exec zsh
 }
 
 
@@ -82,4 +87,3 @@ function run_script() {
 ############################################################
 
 run_script "$@"
-

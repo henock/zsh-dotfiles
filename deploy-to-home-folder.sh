@@ -1,6 +1,4 @@
 #! /bin/bash
-set -eu
-
 
 source extensions/.utils.zsh
 
@@ -27,17 +25,20 @@ function upsert_symlink() {
   ln -s "$source_file" "$target_file"
 }
 
-function check_with_user_and_backup_file() {
+function check_with_user_and_backup() {
   local target_file="$1"
+  local backup_destination="$2"
   if [ -e "$target_file" ]; then
     local ls_of_target_file="\n\n$(ls -la $1)\n\n"
     if  [ -f "$target_file" ]; then
-      local back_up_name_extension=$(short_date)
-      local back_up_file="$target_file.bak.$back_up_name_extension"
-      local users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to backup $ls_of_target_file to $back_up_file)"
+      if [ "$#" -eq 1 ]; then
+        local back_up_name_extension=$(short_date)
+        backup_destination="$target_file.bak.$back_up_name_extension"
+      fi
+      local users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to backup $ls_of_target_file to $backup_destination)"
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
-        echo_in_verbose_mode "Backing up file $target_file to $back_up_file"
-        cp "$target_file" "$back_up_file"
+        echo_in_verbose_mode "Backing up file $target_file to $backup_destination"
+        cp "$target_file" "$backup_destination"
       fi
     fi
   fi
@@ -46,16 +47,17 @@ function check_with_user_and_backup_file() {
 function display_file_and_its_existence(){
   local file="$1"
   local file_prefix_comment
+
   if [ "$#" -eq 2 ]; then
     file_prefix_comment="$2"
   else
     file_prefix_comment=""
   fi
-  local existence=" (exists)"
+  local existence=" Will be \033[31mreplaced\033[0m :"
   if [ ! -e "$file" ]; then
-    existence=" (Doesn't exist and will be created)"
+    existence=" Will be \033[32mcreated\033[0m  :"
   fi
-  echo "$file_prefix_comment $file $existence"
+  echo -e "$existence $file_prefix_comment $file"
 }
 
 function create_folder_if_it_does_exist() {
@@ -66,7 +68,6 @@ function create_folder_if_it_does_exist() {
 }
 
 function deploy_links_and_folders() {
-
   local plugins_dir="$BASE_DIR/plugins"
   local extensions_dir="$BASE_DIR/extensions/"
   local vim_files_dir="$BASE_DIR/vim-files-for-users-home-dir/"
@@ -82,23 +83,12 @@ function deploy_links_and_folders() {
   local zshrc_file_in_home_dir="$HOME/.zshrc"
   local syntax_highlighting_file_in_home_dir="$plugin_dir_in_home/$syntax_highlighting_file"
 
-  echo -e "\n\n"
-  echo -e "Source files/folder...\n"
-  echo "BASE_DIR                                : $BASE_DIR";
-  echo "plugins_dir                             : $plugins_dir";
-  echo "vim_files_dir                           : $vim_files_dir";
-  echo "vim_folders                             : $vim_folders";
-  echo "extensions_dir                          : $extensions_dir";
-  echo "zshrc_files_dir                         : $zshrc_files_dir";
-  echo "syntax_highlighting_file_in_project_dir : $syntax_highlighting_file_in_project_dir";
-
-  echo -e "\nTarget files/folder...\n"
-
-  display_file_and_its_existence "$vim_dir_in_home" "vim_dir_in_home                         : "
-  display_file_and_its_existence "$plugin_dir_in_home" "plugin_dir_in_home                      : "
-  display_file_and_its_existence "$extensions_dir_in_home" "extensions_dir_in_home                  : "
-  display_file_and_its_existence "$zshrc_file_in_home_dir" "zshrc_file_in_home_dir                  : "
-  display_file_and_its_existence "$syntax_highlighting_file_in_home_dir" "syntax_highlighting_file_in_home_dir    : "
+  echo -e "\nPath where the zsh-dotfiles actually sit  :  $BASE_DIR\n";
+  display_file_and_its_existence "$vim_dir_in_home"
+  display_file_and_its_existence "$plugin_dir_in_home"
+  display_file_and_its_existence "$extensions_dir_in_home"
+  display_file_and_its_existence "$zshrc_file_in_home_dir"
+  display_file_and_its_existence "$syntax_highlighting_file_in_home_dir"
 
   echo -e "\n"
 
@@ -108,25 +98,19 @@ function deploy_links_and_folders() {
     exit 0;
   fi
 
-
-  PROMPT_FOR_ANY_CONFIRMATIONS="$USER_ANSWER_NO"
-
-  if [ "$VERBOSE" = true ]; then
+  if [[ "$SILENT" = false ]]; then
     users_response=$(check_user_wants_to_proceed "Prompt before changes" )
-    if [ "$users_response" -ne "$USER_ANSWER_NO" ]; then
-      PROMPT_FOR_ANY_CONFIRMATIONS="$USER_ANSWER_YES"
+    if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
+      SILENT=true
     fi
   fi
-
 
   check_with_user_and_remove "$vim_dir_in_home"
   check_with_user_and_remove "$plugin_dir_in_home"
   check_with_user_and_remove "$extensions_dir_in_home"
 
-  check_with_user_and_backup_file "$zshrc_file_in_home_dir"
+  check_with_user_and_backup "$zshrc_file_in_home_dir"
   check_with_user_and_remove "$syntax_highlighting_file_in_home_dir"
-
-  echo -e "\nDeploying .zshrc and all my extension files...\n"
 
   create_folder_if_it_does_exist "$plugin_dir_in_home"
   create_folder_if_it_does_exist "$extensions_dir_in_home"
@@ -163,7 +147,7 @@ function symlink_files_in_folder() {
     local dot_file=`basename $i`
     local source_file="$source_dir/$dot_file"
     local target_file="$destination_dir/$dot_file"
-    echo_in_verbose_mode -e "        Symliking file: $source_file -> $target_file"
+    echo_in_verbose_mode "        Symliking file: $source_file -> $target_file"
     upsert_symlink "$target_file" "$source_file"
   done
 }
@@ -172,11 +156,11 @@ function symlink_files_in_folder() {
 function setting_up_sublime_key_mappings_file() {
   set +e #Temprarily allow a command to fail without exiting the script.
   local sublime_keymap_dir=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
-  set -e
+  set -eu
   if [[ -d "$sublime_keymap_dir" ]]; then
     set +e #Temprarily allow a command to fail without exiting the script.
     local sublime_keymap_file=$(find "$sublime_keymap_dir" |  grep '/Default (OSX).sublime-keymap$')
-    set -e
+    set -eu
     local my_sublime_keymap_file="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
     local perform_copy=-1
     if [ -f "$sublime_keymap_file" ]; then
@@ -203,41 +187,59 @@ function setting_up_sublime_key_mappings_file() {
 }
 
 function show_deploy_help() {
-  local bold=$(tput bold)
-  local norm=$(tput sgr0)
+  local bold_font=$(tput bold)
+  local normal_font=$(tput sgr0)
   echo -e ""
-  echo -e "${bold}SYNOPSIS${norm}"
+  echo -e "${bold_font}SYNOPSIS${normal_font}"
   echo -e ""
   echo -e "    ./deploy-to-home-folder.sh [options] <project dir - defaults to current>"
   echo -e ""
-  echo -e "${bold}DESCRIPTION${norm}"
+  echo -e "${bold_font}DESCRIPTION${normal_font}"
   echo -e ""
-  echo -e "The ${bold}deploy-to-home-folder.sh${norm} script deploys the .zsh-dotfiles to your home folder. Replacing respective files and folders."
+  echo -e "  The ${bold_font}deploy-to-home-folder.sh${normal_font} script deploys the .zsh-dotfiles to your home folder. Replacing respective files and folders."
+  echo -e ""
+  echo -e "  Configured files"
+  echo -e ""
+  echo -e "  .vim"
+  echo -e "      /swaps"
+  echo -e "      /undo"
+  echo -e "      /colors"
+  echo -e "      /colors/solarized.vim -----------------------> {path to zsh-dotfiles}/solarized.vim"
+  echo -e "      /syntax"
+  echo -e "      /syntax/json.vim ----------------------------> {path to zsh-dotfiles}/json.vim"
+  echo -e "      /backups"
+  echo -e "  .zshrc -------------------------------------------> {path to zsh-dotfiles}/zshrc-files-for-users-home-dir/.zshrc"
+  echo -e "  .gvimrc ------------------------------------------> {path to zsh-dotfiles}/vim-files-for-users-home-dir/.gvimrc"
+  echo -e "  .vimrc -------------------------------------------> {path to zsh-dotfiles}/vim-files-for-users-home-dir/.vimrc"
+  echo -e "  .zsh_extensions/{bunch of extensions files} ------> {path to zsh-dotfiles}/{bunch of extensions files}"
+  echo -e "  .zsh_plugins/{bunch of plugins files} ------------> {path to zsh-dotfiles}/{bunch of plugins files}"
   echo -e ""
   echo -e "    The following options are available: \n"
-  echo -e "    ${bold}-h${norm}     show this help page\n"
-  echo -e "    ${bold}-v${norm}     verbose mode\n"
-  echo -e "    ${bold}-d${norm}     deploy files\n"
+  echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
+  echo -e "    ${bold_font}-v${normal_font}     verbose mode  - Is verbose when performing actions (takes precedence over silent mode).\n"
+  echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
+  echo -e "    ${bold_font}-d${normal_font}     deploy files  - Actually deploys the zsh-dot files to your home folder and loads them in (does not work when in preview mode).\n"
 }
 
-
 function deal_with_options() {
-  while getopts "vhd" option; do
+  local show_help=true
+
+  while getopts "vhdS" option; do
     case $option in
       v)
-  echo "v"
         VERBOSE=true
         ;;
       h)
-  echo "h"
         show_help=true
         ;;
       d)
-  echo "d"
         show_help=false
         ;;
+      S)
+        show_help=false
+        SILENT=true
+        ;;
       \?)
-  echo "?"
         show_help=true
       ;;
     esac
@@ -272,12 +274,13 @@ function reload_zsh() {
 
 function run_script() {
   VERBOSE=false
+  SILENT=false
   TRUE=0
   FALSE=1
   USER_ANSWER_YES=1
   USER_ANSWER_NO=2
-  PROMPT_FOR_ANY_CONFIRMATIONS="$USER_ANSWER_YES"
   show_help=true
+
 
   deal_with_options "$@"
   set_project_dirs "$@"

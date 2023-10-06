@@ -24,9 +24,7 @@ if [ -e "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ]; then
   (( $+commands[sudo] )) && alias sst='sudo st'
 
 else
-	echo "================================================================================"
-	echo "|     Sublime not found on the system - you will need to install it first!     |"
-	echo "================================================================================"
+	echo "     Sublime not found on the system."
 fi
 
 

@@ -28,12 +28,11 @@ autoload colors
 colors
 
 # Reload the shell (i.e. invoke as a login shell)
-alias reload="echo -n 'Reloading' && exec zsh "
+alias reload="echo -n 'Reloading..  ' && exec zsh "
 alias zshrc='vim ${ZDOTDIR:-$HOME}/.zshrc' # Quick access to the .zshrc file
 
 # Source my _extension files
 for extension_file in ~/.zsh_extensions/.*.zsh; do
-  echo -n ". sourcing $extension_file \n"
   [ -r "$extension_file" ] && [ -f "$extension_file" ] && source "$extension_file" ;
 done;
 unset extension_file;
