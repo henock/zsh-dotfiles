@@ -1,18 +1,10 @@
 #! /bin/bash
 
-function check_user_wants_to_proceed_allow_for_default() {
-  if [[ "$SILENT" = false || "$VERBOSE" = true  ]]; then
-    users_response=$(check_user_wants_to_proceed "$@")
-    echo "$users_response"
-  else
-    echo "$USER_ANSWER_YES"
-  fi
-}
 
 function check_user_wants_to_proceed() {
-  if [[ "$SILENT" = false ]]; then
+  if [[ "$SILENT" = false || "$VERBOSE" = true  ]]; then
     local prompt=$@
-    echo -e "$prompt [y/n]: "  > /dev/tty
+    echo -e "$prompt \n\n[y/n]: "  > /dev/tty
     read -r user_answer
 
     if [[ "y" == "$user_answer" ]]; then
@@ -32,19 +24,19 @@ function check_with_user_and_remove() {
   if [ -e "$target_file" ]; then
     ls_of_target_file="\n\n$(ls -la $1)\n\n"
     if [ -d "$target_file" ]; then
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to delete the directory $target_file and all its contents)"
+      users_response="$(check_user_wants_to_proceed Do you want to delete the directory $target_file and all its contents)"
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
         echo_in_verbose_mode "Deleting dir: $target_file"
         rm -rf "$target_file"
       fi
     elif  [ -h "$target_file" ]; then
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to unlink $ls_of_target_file)"
+      users_response="$(check_user_wants_to_proceed Do you want to unlink $ls_of_target_file)"
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
         echo_in_verbose_mode "Unlinking: $target_file"
         unlink "$target_file"
       fi
     elif  [ -f "$target_file" ]; then
-      users_response="$(check_user_wants_to_proceed_allow_for_default Do you want to delete $ls_of_target_file)"
+      users_response="$(check_user_wants_to_proceed Do you want to delete $ls_of_target_file)"
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
         echo_in_verbose_mode "Deleting file $target_file"
         rm "$target_file"
@@ -55,7 +47,8 @@ function check_with_user_and_remove() {
 
 
 function echo_in_verbose_mode() {
-  if [[ -z "${VERBOSE+x}" && "$VERBOSE" = true ]]; then
+#  echo -e "echo_in_verbose_mode: $VERBOSE is-set:${VERBOSE+x} comment:$1"
+  if [[ "$VERBOSE" = true ]]; then
     echo -e "$1"
   fi
 }
