@@ -44,10 +44,10 @@ bindkey "[C" forward-word
 
 end_time="$(date +%s)"
 
-## HAS TO BE THE LAST FOR IT WORK
-source ~/.zsh_plugins/.zsh-syntax-highlighting.zsh
-
-echo "Time taken: $(($end_time - $start_time))s"
-
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/nomad nomad
+
+## HAS TO BE THE LAST FOR IT WORK
+source ~/.zsh_plugins/zsh-syntax-highlighting.zsh
+
+echo "Time taken: $(($end_time - $start_time))s"

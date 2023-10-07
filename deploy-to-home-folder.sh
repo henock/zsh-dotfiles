@@ -36,16 +36,14 @@ function check_with_user_and_backup() {
     fi
 
     if [[ -d "$target_file" ]]; then
-      local users_response="$(check_user_wants_to_proceed \\n\\nDo you want to backup \(by moving\) dir \\n$target_file to\\n$backup_destination)"
+      local users_response=$(check_user_wants_to_proceed "\n\nDo you want to backup \(by moving\) dir \n$target_file to\n$backup_destination")
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
         echo_in_verbose_mode "\n\nBacking up dir \n$target_file to \n$backup_destination"
         mv -f "$target_file" "$backup_destination"
       fi
     elif [[ -f "$target_file" ]]; then
       local ls_of_target_file="\n$(ls $1)\n"
-
-      local users_response="$(check_user_wants_to_proceed \\n\\nDo you want to backup \(by moving\):\\n$target_file to\\n$backup_destination)"
-
+      local users_response=$(check_user_wants_to_proceed "\n\nDo you want to backup \(by moving\):\n$target_file to\n$backup_destination")
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
         echo_in_verbose_mode "Backing up file $target_file to $backup_desdirn"
         mv -f "$target_file" "$backup_destination"
@@ -65,16 +63,16 @@ function display_file_and_its_existence(){
   fi
   local existence=" Will be \033[31mbacked up and replaced\033[0m :"
   if [ ! -e "$file" ]; then
-    existence=" Will be \033[32mcreated\033[0m  :"
+    existence=" Will be \033[32mcreated\033[0m                :"
   fi
   echo -e "$existence $file_prefix_comment $file"
 }
 
-function create_folder_if_it_does_exist() {
-  local folder="$1"
-  if [ ! -d "$folder" ]; then
-    echo_in_verbose_mode "Creating folder $folder"
-    mkdir "$folder"
+function create_dir_if_it_does_exist() {
+  local dir="$1"
+  if [ ! -d "$dir" ]; then
+    echo_in_verbose_mode "Creating dir $dir"
+    mkdir "$dir"
   fi
 }
 
@@ -86,7 +84,7 @@ function create_dir_tree() {
   echo_in_verbose_mode "create_dir_tree: create_dir_in_path=$create_dir_in_path"
 
   if [[ -d "$local_dir_path" ]]; then
-    mkdir -p "$create_dir_in_path"
+    create_dir_if_it_does_exist "$create_dir_in_path"
     if [ "$(ls -A $local_dir_path)" ]; then
       for file in $(ls -A $local_dir_path); do    # colors/syntax
         create_dir_tree "$local_dir_path/$file" "$create_dir_in_path/$file"
@@ -107,24 +105,24 @@ function deploy_object() {
     if [[ "$action" = "CHECK_STATUS" ]]; then
       display_file_and_its_existence "$object_in_users_home"
     elif [[ "$action" = "CREATE_DIRS" ]]; then
+      check_with_user_and_backup "$object_in_users_home"
       echo_in_verbose_mode "Creating directories for $object_in_local_home"
       create_dir_tree "$object_in_local_home" "$object_in_users_home"
     elif [[ "$action" = "DEPLOY" ]]; then
       echo_in_verbose_mode "Deploying $object_in_local_home"
       check_with_user_and_backup "$object_in_users_home"
+      echo_in_verbose_mode "\nSymlinking: $object_in_users_home -> $object_in_local_home"
+      upsert_symlink "$object_in_users_home" "$object_in_local_home"
     fi
 }
 
 function deploy_links_and_folders() {
-
   echo -e "\nPath where the zsh-dotfiles actually sit  :  $LOCAL_USERS_HOME_DIR";
   echo -e "\nPath where we are going to write them to  :  $USERS_HOME\n\n";
 
-  deploy_object ".vim" "CHECK_STATUS"
-  deploy_object ".gvimrc" "CHECK_STATUS"
-  deploy_object ".vimrc" "CHECK_STATUS"
-  deploy_object ".zsh_extensions" "CHECK_STATUS"
-  deploy_object ".zshrc" "CHECK_STATUS"
+  for file in '.vim' '.gvimrc' '.vimrc' '.zsh_extensions' '.zsh_plugins' '.zshrc'; do
+    deploy_object "$file" "CHECK_STATUS"
+  done
 
   users_response=$(check_user_wants_to_proceed "Do you want to deploy with config above")
   if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
@@ -141,40 +139,11 @@ function deploy_links_and_folders() {
   fi
 
   deploy_object ".vim" "CREATE_DIRS"
-  deploy_object ".vim" "DEPLOY"
-exit 0
-  deploy_object ".gvimrc" "DEPLOY"
-  deploy_object ".vimrc" "DEPLOY"
-  deploy_object ".zsh_extensions" "DEPLOY"
-  deploy_object ".zshrc" "DEPLOY"
-  deploy_object ".vim/colors/solarized.vim" "DEPLOY"
-  deploy_object ".vim/syntax/json.vim" "DEPLOY"
 
-  symlink_dir "$extensions_dir" "$extensions_dir_in_home"
-
-  symlink_file "$zshrc_file" "$zshrc_file_in_home_dir"
-  symlink_file "$vim_dir/colors/solarized.vim" "$vim_dir_in_home/colors/solarized.vim"
-  symlink_file "$vim_dir/syntax/json.vim" "$vim_dir_in_home/syntax/json.vim"
-
-
-#  symlink_file "$syntax_highlighting_file_in_home_dir" "$plugins_dir/zsh-syntax-highlighting.zsh"
+  for file in '.gvimrc' '.vimrc' '.zsh_extensions' '.zsh_plugins' '.zshrc' '.vim/colors/solarized.vim' '.vim/syntax/json.vim'; do
+    deploy_object "$file" "DEPLOY"
+  done
 }
-
-
-function symlink_dir() {
-  local source_dir="$1"
-  local destination_dir="$2"
-  echo_in_verbose_mode "\nSymlinking dir: $destination_dir -> $source_dir"
-  upsert_symlink "$destination_dir" "$source_dir"
-}
-
-function symlink_file() {
-  local source_file="$1"
-  local destination_file="$2"
-  echo_in_verbose_mode "\nSymlinking file: $destination_file -> $source_file"
-  upsert_symlink "$destination_file" "$source_file"
-}
-
 
 function setting_up_sublime_key_mappings_file() {
   set +e #Temprarily allow a command to fail without exiting the script.
@@ -215,33 +184,35 @@ function show_deploy_help() {
   echo -e ""
   echo -e "${bold_font}SYNOPSIS${normal_font}"
   echo -e ""
-  echo -e "    ./deploy-to-home-folder.sh [options] <project dir - defaults to current>"
+  echo -e "    ./deploy-to-home-folder.sh [options]"
   echo -e ""
   echo -e "${bold_font}DESCRIPTION${normal_font}"
   echo -e ""
   echo -e "  The ${bold_font}deploy-to-home-folder.sh${normal_font} script deploys the .zsh-dotfiles to your home folder. Replacing respective files and folders."
+  echo -e "  The deployed files are actually symlinked back to the respective files in this project (allowing you to manage them in source control outside your home directory)."
   echo -e ""
-  echo -e "  Configured files"
+  echo -e "  Missing directories are created, files are symlinked."
   echo -e ""
-  echo -e "  .vim"
-  echo -e "      /swaps"
-  echo -e "      /undo"
-  echo -e "      /colors"
-  echo -e "      /colors/solarized.vim -----------------------> {path to zsh-dotfiles}/solarized.vim"
-  echo -e "      /syntax"
-  echo -e "      /syntax/json.vim ----------------------------> {path to zsh-dotfiles}/json.vim"
-  echo -e "      /backups"
-  echo -e "  .zshrc -------------------------------------------> {path to zsh-dotfiles}/zshrc-files-for-users-home-dir/.zshrc"
-  echo -e "  .gvimrc ------------------------------------------> {path to zsh-dotfiles}/vim-files-for-users-home-dir/.gvimrc"
-  echo -e "  .vimrc -------------------------------------------> {path to zsh-dotfiles}/vim-files-for-users-home-dir/.vimrc"
-  echo -e "  .zsh_extensions/{bunch of extensions files} ------> {path to zsh-dotfiles}/{bunch of extensions files}"
-  echo -e "  .zsh_plugins/{bunch of plugins files} ------------> {path to zsh-dotfiles}/{bunch of plugins files}"
+  echo -e "  .vim/"
+  echo -e "       |_ backups/"
+  echo -e "       |_ colors/"
+  echo -e "       |_ colors/solarized.vim ------------------------> {path to zsh-dotfiles}/.vim/colors/solarized.vim"
+  echo -e "       |_ swaps/"
+  echo -e "       |_ syntax/"
+  echo -e "       |_ syntax/json.vim -----------------------------> {path to zsh-dotfiles}/.vim/syntax/json.vim"
+  echo -e "       |_ undo/"
+  echo -e ""
+  echo -e "  .zshrc ----------------------------------------------> {path to zsh-dotfiles}/.zshrc"
+  echo -e "  .gvimrc ---------------------------------------------> {path to zsh-dotfiles}/.gvimrc"
+  echo -e "  .vimrc ----------------------------------------------> {path to zsh-dotfiles}/.vimrc"
+  echo -e "  .zsh_extensions/{bunch of extensions files} ---------> {path to zsh-dotfiles}/.zsh_extensions/{bunch of extensions files}"
+  echo -e "  .zsh_plugins/{bunch of plugins files} ---------------> {path to zsh-dotfiles}/.zsh_plugins/{bunch of plugins files}"
   echo -e ""
   echo -e "    The following options are available: \n"
   echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
-  echo -e "    ${bold_font}-t${normal_font}     run in test move (does the work in <project-base-dir>/TEST folder\n"
-  echo -e "    ${bold_font}-v${normal_font}     verbose mode  - Is verbose when performing actions (takes precedence over silent mode).\n"
+  echo -e "    ${bold_font}-t${normal_font}     run in test mode (does the work in <project-base-dir>/TEST folder\n"
   echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
+  echo -e "    ${bold_font}-v${normal_font}     verbose mode  - Is verbose when performing actions (takes precedence over silent mode).\n"
   echo -e "    ${bold_font}-d${normal_font}     deploy files  - Actually deploys the zsh-dot files to your home folder and loads them in (does not work when in preview mode).\n"
 }
 
@@ -289,7 +260,7 @@ function set_project_dirs() {
 
   if [ "$RUN_AS_TEST" = true ]; then
     USERS_HOME="$BASE_DIR/TEST"
-    mkdir "$USERS_HOME"
+    mkdir -p "$USERS_HOME"
   else
     USERS_HOME="$HOME"
   fi
@@ -300,7 +271,7 @@ function reload_zsh() {
     echo "Not reloading zsh because we are running as a test"
   else
     if [ "$VERBOSE" = true ]; then
-      users_response=$(check_user_wants_to_proceed "\n\nRestart zsh to apply the .files" )
+      users_response=$(check_user_wants_to_proceed "Restart zsh to apply the .files" )
       if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
         echo "Exiting...  you will need to reload manually (ie. by running 'exec zsh')."
         exit 0;
