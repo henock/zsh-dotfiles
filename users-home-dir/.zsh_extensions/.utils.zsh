@@ -18,12 +18,28 @@ function check_user_wants_to_proceed() {
   fi
 }
 
+
+function set_project_dirs() {
+  PWD="`pwd`"
+  PROJECT_DIR="$(dirname "$PWD/$0")"
+  BASE_DIR="$(cd $PROJECT_DIR; pwd -P)"  # Setting BASE_DIR to something like /Users/<userName>/projects/zsh-dotfiles/
+  LOCAL_USERS_HOME_DIR="$BASE_DIR/users-home-dir"
+
+  if [ "$RUN_AS_TEST" = true ]; then
+    USERS_HOME="$BASE_DIR/TEST"
+    mkdir -p "$USERS_HOME"
+  else
+    USERS_HOME="$HOME"
+  fi
+}
+
+
 function check_with_user_and_remove() {
   local target_file="$1"
   local users_response
   local ls_of_target_file
   if [ -e "$target_file" ]; then
-    ls_of_target_file="\n\n$(ls -la $1)\n\n"
+    ls_of_target_file="\n\n$(ls -la $1)\n"
     if [ -d "$target_file" ]; then
       users_response=$(check_user_wants_to_proceed "Do you want to delete the directory $target_file and all its contents")
       if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then

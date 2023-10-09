@@ -52,7 +52,7 @@ function check_with_user_and_backup() {
   fi
 }
 
-function display_file_and_its_existence(){
+function display_file_and_its_future(){
   local file="$1"
   local file_prefix_comment
 
@@ -61,9 +61,9 @@ function display_file_and_its_existence(){
   else
     file_prefix_comment=""
   fi
-  local existence=" Will be \033[31mbacked up and replaced\033[0m :"
+  local existence=" Will be \033[31m backed up and replaced \033[0m :"
   if [ ! -e "$file" ]; then
-    existence=" Will be \033[32mcreated\033[0m                :"
+    existence=" Will be \033[32m created \033[0m                :"
   fi
   echo -e "$existence $file_prefix_comment $file"
 }
@@ -103,7 +103,7 @@ function deploy_object() {
     local object_in_local_home="$LOCAL_USERS_HOME_DIR/$object"
 
     if [[ "$action" = "CHECK_STATUS" ]]; then
-      display_file_and_its_existence "$object_in_users_home"
+      display_file_and_its_future "$object_in_users_home"
     elif [[ "$action" = "CREATE_DIRS" ]]; then
       check_with_user_and_backup "$object_in_users_home"
       echo_in_verbose_mode "Creating directories for $object_in_local_home"
@@ -120,7 +120,7 @@ function deploy_links_and_folders() {
   echo -e "\nPath where the zsh-dotfiles actually sit  :  $LOCAL_USERS_HOME_DIR";
   echo -e "\nPath where we are going to write them to  :  $USERS_HOME\n\n";
 
-  for file in '.vim' '.gvimrc' '.vimrc' '.zsh_extensions' '.zsh_plugins' '.zshrc'; do
+  for file in {.vim,.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc}; do
     deploy_object "$file" "CHECK_STATUS"
   done
 
@@ -140,7 +140,7 @@ function deploy_links_and_folders() {
 
   deploy_object ".vim" "CREATE_DIRS"
 
-  for file in '.gvimrc' '.vimrc' '.zsh_extensions' '.zsh_plugins' '.zshrc' '.vim/colors/solarized.vim' '.vim/syntax/json.vim'; do
+  for file in {.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.vim/colors/solarized.vim,.vim/syntax/json.vim}; do
     deploy_object "$file" "DEPLOY"
   done
 }
@@ -237,7 +237,7 @@ function deal_with_options() {
         show_help=false
         SILENT=true
         ;;
-      \?)
+      ?)  # we only show help for any invalid options
         show_help=true
       ;;
     esac
@@ -251,20 +251,6 @@ function deal_with_options() {
   fi
 }
 
-
-function set_project_dirs() {
-  PWD="`pwd`"
-  PROJECT_DIR="$(dirname "$PWD/$0")"
-  BASE_DIR="$(cd $PROJECT_DIR; pwd -P)"  # Setting BASE_DIR to something like /Users/<userName>/projects/zsh-dotfiles/
-  LOCAL_USERS_HOME_DIR="$BASE_DIR/users-home-dir"
-
-  if [ "$RUN_AS_TEST" = true ]; then
-    USERS_HOME="$BASE_DIR/TEST"
-    mkdir -p "$USERS_HOME"
-  else
-    USERS_HOME="$HOME"
-  fi
-}
 
 function reload_zsh() {
   if [ "$RUN_AS_TEST" = true ]; then

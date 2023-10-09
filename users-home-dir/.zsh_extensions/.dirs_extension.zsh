@@ -29,17 +29,20 @@ alias 9='cd -9'
 alias md='mkdir -p'
 alias rd=rmdir
 
-# List directory contents
-alias ls='ls -G'
-
-alias l='ls -ltrh'      # ls reversed timestamp, human readable
-alias ll='ls -ltrh'
-alias lsa='ls -ltrah'
-alias la='ls -ltrah'
-alias ldot='ls -ld .*'  # show dot files only
 
 # clear the screen
 alias c='clear'
+
+# List directory contents
+alias ls='ls -G'            # -G show with colors
+alias l='ls -ltrh'          # ls reversed modified timestamp, human readable
+alias ll='l'
+alias la='l -A'             # -A includes directory entries whose names begin with a dot (‘.’) except for . and ...
+alias lsd="la | grep '^d'"  # show directories only
+alias cl="clear && l"
+alias cla="clear && la"
+alias clsd="clear && lsd"
+alias ldot='ls -ld .*'      # show dot files only (only works for current directory)
 
 # Shortcuts
 alias dc="cd ~/Documents"
@@ -47,11 +50,6 @@ alias dl="cd ~/Downloads"
 alias dt="cd ~/Desktop"
 alias p="cd ~/projects"
 
-alias la="l -A"
-alias cl="clear && l"
-alias cla="clear && la"
-alias lsd="la | grep '^d'"  # show directories only
-alias clsd="cla | grep '^d'"
 
 # Looking at files
 alias lsi='less -i'

@@ -1,15 +1,23 @@
 #! /bin/bash
 
-source extensions/.utils.zsh
+source users-home-dir/.zsh_extensions/.utils.zsh
 
 
 function undeploy_zsh_dot_files() {
-  check_with_user_and_remove ~/.zshrc
-  check_with_user_and_remove ~/.gvimrc
-  check_with_user_and_remove ~/.vimrc
-  check_with_user_and_remove ~/.zsh_extensions
-  check_with_user_and_remove ~/.zsh_plugins
-  check_with_user_and_remove ~/.zsh_sessions
+
+  set_project_dirs
+
+  if [ "$RUN_AS_TEST" = true ]; then
+    USERS_HOME="$BASE_DIR/TEST"
+  fi
+
+  check_with_user_and_remove "$USERS_HOME/.vim"
+  check_with_user_and_remove "$USERS_HOME/.zshrc"
+  check_with_user_and_remove "$USERS_HOME/.gvimrc"
+  check_with_user_and_remove "$USERS_HOME/.vimrc"
+  check_with_user_and_remove "$USERS_HOME/.zsh_extensions"
+  check_with_user_and_remove "$USERS_HOME/.zsh_plugins"
+  check_with_user_and_remove "$USERS_HOME/.zsh_sessions"
 }
 
 
@@ -23,10 +31,18 @@ function show_undeploy_help() {
   echo -e ""
   echo -e "${bold_font}DESCRIPTION${normal_font}"
   echo -e ""
-  echo -e "The ${bold_font}undeploy-from-home-folder.sh${normal_font} script undeploys the .zsh-dotfiles from your home folder. Unlinking symlinks, and deleting all .zsh-dotfiles folders."
+  echo -e "The ${bold_font}undeploy-from-home-folder.sh${normal_font} script undeploys the .zsh-dotfiles from your home folder. Unlinking symlinks, and deletes all .zsh-dotfiles installed folders."
+  echo -e ""
+  echo -e "  (deletes)  .vim/"
+  echo -e "  (unlinks)  .zshrc"
+  echo -e "  (unlinks)  .gvimrc"
+  echo -e "  (unlinks)  .vimrc"
+  echo -e "  (deletes)  .zsh_extensions/"
+  echo -e "  (deletes)  .zsh_plugins/"
   echo -e ""
   echo -e "    The following options are available: \n"
   echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
+  echo -e "    ${bold_font}-t${normal_font}     run in test mode (does the work in <project-base-dir>/TEST folder\n"
   echo -e "    ${bold_font}-v${normal_font}     verbose mode (takes precedence over silent mode)\n"
   echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
   echo -e "    ${bold_font}-u${normal_font}     undeploy files\n"
@@ -36,7 +52,7 @@ function show_undeploy_help() {
 
 
 function deal_with_undeploy_options() {
-  while getopts "vhuS" option; do
+  while getopts "vhutS" option; do
     case $option in
       v)
         VERBOSE=true
@@ -46,6 +62,9 @@ function deal_with_undeploy_options() {
         ;;
       u)
         show_help=false
+        ;;
+      t)
+        RUN_AS_TEST=true
         ;;
       S)
         show_help=false
@@ -70,6 +89,7 @@ function deal_with_undeploy_options() {
 function run_script() {
   VERBOSE=false
   SILENT=false
+  RUN_AS_TEST=false
   TRUE=0
   FALSE=1
   USER_ANSWER_YES=1

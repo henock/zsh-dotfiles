@@ -142,6 +142,7 @@ _1RIGHT="[%*] "
 
 
 bureau_precmd () {
+  show_non_zero_response_code
   _1SPACES=`get_space $_1LEFT $_1RIGHT`
   print
   print -rP "$_1LEFT$_1SPACES$_1RIGHT"
