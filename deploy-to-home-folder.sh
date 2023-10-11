@@ -131,11 +131,10 @@ function deploy_links_and_folders() {
   fi
 
   if [[ "$SILENT" = false ]]; then
-    users_response=$(check_user_wants_to_proceed "Do you want a prompt before each change" )
+    users_response=$(check_user_wants_to_proceed "Do you want a prompt before each backup" )
     if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
       SILENT=true
     fi
-    echo "SILENT=$SILENT"
   fi
 
   deploy_object ".vim" "CREATE_DIRS"
@@ -143,35 +142,54 @@ function deploy_links_and_folders() {
   for file in {.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.vim/colors/solarized.vim,.vim/syntax/json.vim}; do
     deploy_object "$file" "DEPLOY"
   done
+
+  create_local_only_extension_file
+
+}
+
+function create_local_only_extension_file() {
+    local file_to_create="$LOCAL_USERS_HOME_DIR/.zsh_extensions/.local_only_extension.zsh"
+    if [ ! -e "$file_to_create" ]; then
+      echo_in_verbose_mode "Creating file: $file_to_create"
+      echo "# This file is used to allow you to write functions" >> "$file_to_create"
+      echo "# or aliases that you dont want to have in source control" >> "$file_to_create"
+    else
+      echo -e "\n\n.local_only_extension.zsh file already exists, leaving it alone. \nfull path: $file_to_create\n"
+    fi
 }
 
 function setting_up_sublime_key_mappings_file() {
   set +e #Temprarily allow a command to fail without exiting the script.
-  local sublime_keymap_dir=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
+  local sublime_dir="~/Library/Application Support/Sublime"
   set -eu
-  if [[ -d "$sublime_keymap_dir" ]]; then
-    set +e #Temprarily allow a command to fail without exiting the script.
-    local sublime_keymap_file=$(find "$sublime_keymap_dir" |  grep '/Default (OSX).sublime-keymap$')
-    set -eu
-    local my_sublime_keymap_file="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
-    local perform_copy=-1
-    if [ -f "$sublime_keymap_file" ]; then
-      if ! diff "$sublime_keymap_file" "$my_sublime_keymap_file"; then
-        local back_up_name_extension=$(short_date)
-        local back_up_file="$sublime_keymap_file.bak-$back_up_name_extension"
-        echo "Found a sublime keymap file different to mine (above is the difference) backed it up to $back_up_file"
-        mv "$sublime_keymap_file" "$back_up_file"
-        echo "And replacing it with mine"
+  if [[ -e "$sublime_dir" ]]; then
+    local sublime_keymap_dir=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
+    if [[ -d "$sublime_keymap_dir" ]]; then
+      set +e #Temprarily allow a command to fail without exiting the script.
+      local sublime_keymap_file=$(find "$sublime_keymap_dir" |  grep '/Default (OSX).sublime-keymap$')
+      set -eu
+      local my_sublime_keymap_file="$BASE_DIR/sublime/Default (OSX).sublime-keymap"
+      local perform_copy=-1
+      if [ -f "$sublime_keymap_file" ]; then
+        if ! diff "$sublime_keymap_file" "$my_sublime_keymap_file"; then
+          local back_up_name_extension=$(short_date)
+          local back_up_file="$sublime_keymap_file.bak-$back_up_name_extension"
+          echo "Found a sublime keymap file different to mine (above is the difference) backed it up to $back_up_file"
+          mv "$sublime_keymap_file" "$back_up_file"
+          echo "And replacing it with mine"
+          perform_copy=0
+        fi
+      else
+        echo "Sublime keymap not found, copying in mine"
         perform_copy=0
       fi
-    else
-      echo "Sublime keymap not found, copying in mine"
-      perform_copy=0
-    fi
 
-    if [ "$perform_copy" -eq 0 ]; then
-      echo "Copying $my_sublime_keymap_file to $sublime_keymap_dir"
-      cp "$my_sublime_keymap_file" "$sublime_keymap_dir"
+      if [ "$perform_copy" -eq 0 ]; then
+        echo "Copying $my_sublime_keymap_file to $sublime_keymap_dir"
+        cp "$my_sublime_keymap_file" "$sublime_keymap_dir"
+      fi
+    else
+      echo "Sublime key map dir not found, not setting the keymap file."
     fi
   else
     echo "Sublime folder not found, not setting the keymap file."
@@ -254,7 +272,7 @@ function deal_with_options() {
 
 function reload_zsh() {
   if [ "$RUN_AS_TEST" = true ]; then
-    echo "Not reloading zsh because we are running as a test"
+    echo -e "\nNot reloading zsh because we are running as a test\n"
   else
     if [ "$VERBOSE" = true ]; then
       users_response=$(check_user_wants_to_proceed "Restart zsh to apply the .files" )

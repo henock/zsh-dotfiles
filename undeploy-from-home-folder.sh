@@ -2,9 +2,7 @@
 
 source users-home-dir/.zsh_extensions/.utils.zsh
 
-
 function undeploy_zsh_dot_files() {
-
   set_project_dirs
 
   if [ "$RUN_AS_TEST" = true ]; then
@@ -47,9 +45,6 @@ function show_undeploy_help() {
   echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
   echo -e "    ${bold_font}-u${normal_font}     undeploy files\n"
 }
-
-
-
 
 function deal_with_undeploy_options() {
   while getopts "vhutS" option; do
