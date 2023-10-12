@@ -79,14 +79,11 @@ function mkd() {
 }
 
 
-# Create links to alias for all projects
-for i in ~/projects/* ; do
-  if [ -d "$i" ]; then
-    for x in "$i"/* ; do
-      dir=$(dirname "$x")
-      name=$(basename "$x")
-#      echo "$(date +%s) - for $dir/$name"
-      alias c."$name"="cd $dir/$name";
-    done
-  fi
+# Create alias that will cd me directly into the project root for all projects using .git
+# Created aliases are p.<project-folder-name>=cd /path/to/project-folder-name
+for i in $(find ~/projects -maxdepth 4 -name ".git" | sed 's/.git//g') ; do
+  dir=$(dirname "$i")
+  name=$(basename "$i")
+#    echo "$(date +%s) - for $dir/$name"
+  alias p."$name"="cd $dir/$name";
 done

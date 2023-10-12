@@ -14,7 +14,7 @@ if [ $? -eq 0 ]; then
 
   function jql() {
     while read -r data; do
-        printf "%s" "$data" |jq -R -r '. as $line | try fromjson catch $line'
+        printf "%s" "$data" |jq -R -r '. as $line | try from json catch $line'
     done
   }
 
@@ -23,14 +23,14 @@ if [ $? -eq 0 ]; then
         echo "Usage:  <kubectl logs...> | jqll <text to grep for>"
     fi
     while read -r data; do
-        printf "%s" "$data" | jq -R -r '. as $line | try fromjson catch $line' | "$jq_logs_and_errors" | grep -i "$2"
+        printf "%s" "$data" | jq -R -r '. as $line | try from json catch $line' | "$jq_logs_and_errors" | grep -i "$2"
     done
   }
 
   function jqle() {
     while read -r data; do
         if [ $# -eq 1 ]; then    # log level
-            printf "%s" "$data" | jq -R -r '. as $line | try fromjson catch $line' | grep -ib4 "\"level\": \"error\"" | "$jq_logs_and_errors"
+            printf "%s" "$data" | jq -R -r '. as $line | try from json catch $line' | grep -ib4 "\"level\": \"error\"" | "$jq_logs_and_errors"
         fi
     done
   }

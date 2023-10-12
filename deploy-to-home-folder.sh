@@ -25,6 +25,14 @@ function upsert_symlink() {
   ln -s "$source_file" "$target_file"
 }
 
+function deal_with_previous_version() {
+  if [[ $REPLACE_ALL = true ]]; then
+    check_with_user_and_remove "$1"
+  else
+    check_with_user_and_backup "$1" "$2"
+  fi
+}
+
 function check_with_user_and_backup() {
   local target_file="$1"
   local backup_destination="$2"
@@ -36,17 +44,25 @@ function check_with_user_and_backup() {
     fi
 
     if [[ -d "$target_file" ]]; then
-      local users_response=$(check_user_wants_to_proceed "\n\nDo you want to backup \(by moving\) dir \n$target_file to\n$backup_destination")
-      if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
+      echo ""
+      read -p "\n\nDo you want to backup (by moving) dir \n$target_file to\n$backup_destination [y/n]: " reply
+      if [[ $reply =~ ^[Yy]$ ]]; then
         echo_in_verbose_mode "\n\nBacking up dir \n$target_file to \n$backup_destination"
         mv -f "$target_file" "$backup_destination"
+      else
+        echo -e "\nExiting please deal with $target_file and restart."
+        exit 0;
       fi
     elif [[ -f "$target_file" ]]; then
       local ls_of_target_file="\n$(ls $1)\n"
-      local users_response=$(check_user_wants_to_proceed "\n\nDo you want to backup \(by moving\):\n$target_file to\n$backup_destination")
-      if [[ "$users_response" -eq "$USER_ANSWER_YES" ]]; then
+      echo ""
+      read -p "\n\nDo you want to backup (by moving):\n$target_file to\n$backup_destination [y/n]: " reply
+      if [[ $reply =~ ^[Yy]$ ]]; then
         echo_in_verbose_mode "Backing up file $target_file to $backup_desdirn"
         mv -f "$target_file" "$backup_destination"
+      else
+        echo -e "\nExiting please deal with $target_file and restart."
+        exit 0;
       fi
     fi
   fi
@@ -61,9 +77,16 @@ function display_file_and_its_future(){
   else
     file_prefix_comment=""
   fi
-  local existence=" Will be \033[31m backed up and replaced \033[0m :"
-  if [ ! -e "$file" ]; then
-    existence=" Will be \033[32m created \033[0m                :"
+
+  local existence
+  if [ -e "$file" ]; then
+    if [[ $REPLACE_ALL = true ]]; then
+      existence=" Will be $Red DELETED and replaced \033[0m   :"
+    else
+      existence=" Will be $Red backed up and replaced \033[0m :"
+    fi
+  else
+    existence=" Will be $Green created \033[0m                :"
   fi
   echo -e "$existence $file_prefix_comment $file"
 }
@@ -105,12 +128,17 @@ function deploy_object() {
     if [[ "$action" = "CHECK_STATUS" ]]; then
       display_file_and_its_future "$object_in_users_home"
     elif [[ "$action" = "CREATE_DIRS" ]]; then
-      check_with_user_and_backup "$object_in_users_home"
+      deal_with_previous_version "$object_in_users_home"
       echo_in_verbose_mode "Creating directories for $object_in_local_home"
       create_dir_tree "$object_in_local_home" "$object_in_users_home"
     elif [[ "$action" = "DEPLOY" ]]; then
       echo_in_verbose_mode "Deploying $object_in_local_home"
-      check_with_user_and_backup "$object_in_users_home"
+      deal_with_previous_version "$object_in_users_home"
+      echo_in_verbose_mode "\nSymlinking: $object_in_users_home -> $object_in_local_home"
+      upsert_symlink "$object_in_users_home" "$object_in_local_home"
+    elif [[ "$action" = "REPLACE" ]]; then
+      echo_in_verbose_mode "Replacing $object_in_local_home"
+      deal_with_previous_version "$object_in_users_home"
       echo_in_verbose_mode "\nSymlinking: $object_in_users_home -> $object_in_local_home"
       upsert_symlink "$object_in_users_home" "$object_in_local_home"
     fi
@@ -124,23 +152,21 @@ function deploy_links_and_folders() {
     deploy_object "$file" "CHECK_STATUS"
   done
 
-  users_response=$(check_user_wants_to_proceed "Do you want to deploy with config above")
-  if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
+  echo ""
+  read -p "Do you want to deploy with config above [y/n]: " reply
+  if [[ "$reply" =~ ^[Nn]$ ]]; then
     echo "Exiting."
     exit 0;
-  fi
-
-  if [[ "$SILENT" = false ]]; then
-    users_response=$(check_user_wants_to_proceed "Do you want a prompt before each backup" )
-    if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
-      SILENT=true
-    fi
   fi
 
   deploy_object ".vim" "CREATE_DIRS"
 
   for file in {.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.vim/colors/solarized.vim,.vim/syntax/json.vim}; do
-    deploy_object "$file" "DEPLOY"
+    if [[ $REPLACE_ALL = true ]]; then
+      deploy_object "$file" "REPLACE"
+    else
+      deploy_object "$file" "DEPLOY"
+    fi
   done
 
   create_local_only_extension_file
@@ -229,15 +255,15 @@ function show_deploy_help() {
   echo -e "    The following options are available: \n"
   echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
   echo -e "    ${bold_font}-t${normal_font}     run in test mode (does the work in <project-base-dir>/TEST folder\n"
-  echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
-  echo -e "    ${bold_font}-v${normal_font}     verbose mode  - Is verbose when performing actions (takes precedence over silent mode).\n"
+  echo -e "    ${bold_font}-R${normal_font}     *USE WITH CARE* Replaces the current files and folders.\n"
+  echo -e "    ${bold_font}-v${normal_font}     verbose mode  - Is verbose when performing actions.\n"
   echo -e "    ${bold_font}-d${normal_font}     deploy files  - Actually deploys the zsh-dot files to your home folder and loads them in (does not work when in preview mode).\n"
 }
 
 function deal_with_options() {
   local show_help=true
 
-  while getopts "vhdtS" option; do
+  while getopts "vhdtR" option; do
     case $option in
       v)
         VERBOSE=true
@@ -251,9 +277,9 @@ function deal_with_options() {
       t)
         RUN_AS_TEST=true
         ;;
-      S)
+      R)
         show_help=false
-        SILENT=true
+        REPLACE_ALL=true
         ;;
       ?)  # we only show help for any invalid options
         show_help=true
@@ -275,8 +301,9 @@ function reload_zsh() {
     echo -e "\nNot reloading zsh because we are running as a test\n"
   else
     if [ "$VERBOSE" = true ]; then
-      users_response=$(check_user_wants_to_proceed "Restart zsh to apply the .files" )
-      if [ "$users_response" -eq "$USER_ANSWER_NO" ]; then
+      echo ""
+      read -p "Restart zsh to apply the .files [y/n]" reply
+      if [[ "$reply" =~ ^[nN]$ ]] ; then
         echo "Exiting...  you will need to reload manually (ie. by running 'exec zsh')."
         exit 0;
       fi
@@ -287,7 +314,7 @@ function reload_zsh() {
 
 function run_script() {
   VERBOSE=false
-  SILENT=false
+  REPLACE_ALL=false
   RUN_AS_TEST=false
   TRUE=0
   FALSE=1
@@ -296,7 +323,7 @@ function run_script() {
   show_help=true
 
   deal_with_options "$@"
-  set_project_dirs "$@"
+  set_project_dirs
   deploy_links_and_folders
   reload_zsh
   setting_up_sublime_key_mappings_file

@@ -41,13 +41,12 @@ function show_undeploy_help() {
   echo -e "    The following options are available: \n"
   echo -e "    ${bold_font}-h${normal_font}     show this help page\n"
   echo -e "    ${bold_font}-t${normal_font}     run in test mode (does the work in <project-base-dir>/TEST folder\n"
-  echo -e "    ${bold_font}-v${normal_font}     verbose mode (takes precedence over silent mode)\n"
-  echo -e "    ${bold_font}-S${normal_font}     silent mode - asks no questions\n"
+  echo -e "    ${bold_font}-v${normal_font}     verbose mode\n"
   echo -e "    ${bold_font}-u${normal_font}     undeploy files\n"
 }
 
 function deal_with_undeploy_options() {
-  while getopts "vhutS" option; do
+  while getopts "vhut" option; do
     case $option in
       v)
         VERBOSE=true
@@ -61,11 +60,7 @@ function deal_with_undeploy_options() {
       t)
         RUN_AS_TEST=true
         ;;
-      S)
-        show_help=false
-        SILENT=true
-        ;;
-      \?)
+      ?)
         show_help=true
       ;;
     esac
@@ -83,7 +78,6 @@ function deal_with_undeploy_options() {
 
 function run_script() {
   VERBOSE=false
-  SILENT=false
   RUN_AS_TEST=false
   TRUE=0
   FALSE=1
