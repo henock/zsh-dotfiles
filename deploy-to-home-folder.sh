@@ -186,7 +186,7 @@ function create_local_only_extension_file() {
 
 function setting_up_sublime_key_mappings_file() {
   set +e #Temprarily allow a command to fail without exiting the script.
-  local sublime_dir="~/Library/Application Support/Sublime"
+  local sublime_dir=$HOME/Library/Application\ Support/Sublime\ Text
   set -eu
   if [[ -e "$sublime_dir" ]]; then
     local sublime_keymap_dir=$(find ~/Library/Application\ Support/Sublime* | grep '/Packages/User' | head -n1)
@@ -218,7 +218,7 @@ function setting_up_sublime_key_mappings_file() {
       echo "Sublime key map dir not found, not setting the keymap file."
     fi
   else
-    echo "Sublime folder not found, not setting the keymap file."
+    echo "Sublime folder not found here $sublime_dir, not setting the keymap file."
   fi
 }
 
@@ -325,8 +325,8 @@ function run_script() {
   deal_with_options "$@"
   set_project_dirs
   deploy_links_and_folders
-  reload_zsh
   setting_up_sublime_key_mappings_file
+  reload_zsh
 }
 
 
