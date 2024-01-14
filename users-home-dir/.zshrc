@@ -14,7 +14,7 @@ setopt HIST_FIND_NO_DUPS
 setopt HIST_REDUCE_BLANKS
 setopt HIST_VERIFY
 
-export LINUX_USR=zewdeh
+# export LINUX_USR=zewdeh - now set specific to host in .local_only_extension.zsh
 export PATH="$HOME/bin:$PATH";
 
 #Stop highlighting text when pasting into the terminal

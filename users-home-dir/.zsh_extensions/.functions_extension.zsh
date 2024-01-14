@@ -267,3 +267,36 @@ function show_rename_clean_help() {
   echo -e "    ${bold_font}-p${normal_font}     prompt before moving files\n\n"
 }
 
+function diff_folders(){
+  local folder1="$1"
+  local folder2="$2"
+
+  local default_options="-qr"
+  local ignored_files='.icloud\|.DS_Store\|^Common subdirectories'
+
+  if [ "$#" -ne 2 ]; then
+    __diff_folders_help "$default_options" "$ignored_files"
+  else
+    echo -e ""
+    echo -e ""
+    echo -e "calling: diff $default_options $folder1 $folder2"
+    diff "$default_options" "$folder1" "$folder2" | grep -v "$ignored_files"
+  fi
+}
+
+function __diff_folders_help() {
+  local options="$1"
+  local ignored_files="$2"
+  local bold_font=$(tput bold)
+  local normal_font=$(tput sgr0)
+  echo -e ""
+  echo -e "${bold_font}SYNOPSIS${normal_font}"
+  echo -e ""
+  echo -e "    diff_folders [options] <folder1> <folder2>"
+  echo -e ""
+  echo -e "${bold_font}DESCRIPTION${normal_font}"
+  echo -e ""
+  echo -e "The ${bold_font}diff_folders${normal_font} Diff folders excluding ignored files by using  '| grep -v $ignored_files'"
+  echo -e ""
+  echo -e " Default command diff $options <folder1> <folder2>"
+}
