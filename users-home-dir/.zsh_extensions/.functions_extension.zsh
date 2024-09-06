@@ -82,7 +82,7 @@ function dos2unix() {
 # `less` with options to preserve color and line numbers, unless the output is
 # small enough for one screen.
 function tre() {
-    tree -aC -I '.git|node_modules|bower_components|.idea' --dirsfirst "$@" | less -FRNX;
+    tree -aC -I '.git|node_modules|bower_components|.idea|target' --dirsfirst "$@" | less -FRNX;
 }
 
 function replace_spaces_with_dashes() {
