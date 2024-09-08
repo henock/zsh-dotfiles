@@ -1,3 +1,4 @@
 .local_only_extension.zsh
 .idea
 *.iml
+.DS_Store
