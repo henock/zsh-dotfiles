@@ -42,10 +42,11 @@ bindkey -e
 bindkey "[D" backward-word
 bindkey "[C" forward-word
 
-end_time="$(date +%s)"
-
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/nomad nomad
+
+end_time="$(date +%s)"
+
 
 ## HAS TO BE THE LAST FOR IT WORK
 source ~/.zsh_plugins/zsh-syntax-highlighting.zsh
