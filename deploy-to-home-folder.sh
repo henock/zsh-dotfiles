@@ -148,7 +148,7 @@ function deploy_links_and_folders() {
   echo -e "\nPath where the zsh-dotfiles actually sit  :  $LOCAL_USERS_HOME_DIR";
   echo -e "\nPath where we are going to write them to  :  $USERS_HOME\n\n";
 
-  for file in {.vim,.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc}; do
+  for file in {.vim,.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.tmux.conf}; do
     deploy_object "$file" "CHECK_STATUS"
   done
 
@@ -161,7 +161,7 @@ function deploy_links_and_folders() {
 
   deploy_object ".vim" "CREATE_DIRS"
 
-  for file in {.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.vim/colors/solarized.vim,.vim/syntax/json.vim}; do
+  for file in {.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.tmux.conf,.vim/colors/solarized.vim,.vim/syntax/json.vim}; do
     if [[ $REPLACE_ALL = true ]]; then
       deploy_object "$file" "REPLACE"
     else
@@ -249,6 +249,7 @@ function show_deploy_help() {
   echo -e "  .zshrc ----------------------------------------------> {path to zsh-dotfiles}/.zshrc"
   echo -e "  .gvimrc ---------------------------------------------> {path to zsh-dotfiles}/.gvimrc"
   echo -e "  .vimrc ----------------------------------------------> {path to zsh-dotfiles}/.vimrc"
+  echo -e "  .tmux.conf ------------------------------------------> {path to zsh-dotfiles}/.tmux.conf"
   echo -e "  .zsh_extensions/{bunch of extensions files} ---------> {path to zsh-dotfiles}/.zsh_extensions/{bunch of extensions files}"
   echo -e "  .zsh_plugins/{bunch of plugins files} ---------------> {path to zsh-dotfiles}/.zsh_plugins/{bunch of plugins files}"
   echo -e ""
