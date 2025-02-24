@@ -81,12 +81,12 @@ function display_file_and_its_future(){
   local existence
   if [ -e "$file" ]; then
     if [[ $REPLACE_ALL = true ]]; then
-      existence=" Will be $Red DELETED and replaced \033[0m   :"
+      existence=" Will be $Red DELETED and replaced $Colour_Off   :"
     else
-      existence=" Will be $Red backed up and replaced \033[0m :"
+      existence=" Will be $Red backed up and replaced $Colour_Off :"
     fi
   else
-    existence=" Will be $Green created \033[0m                :"
+    existence=" Will be $Green created $Colour_Off                :"
   fi
   echo -e "$existence $file_prefix_comment $file"
 }
@@ -114,7 +114,7 @@ function create_dir_tree() {
       done
     fi
   else
-    echo_in_verbose_mode "Not creating dir for $local_dir_path as it not a directory"
+    echo_in_verbose_mode "Not doing anything for $local_dir_path as it not a directory"
   fi
 }
 
@@ -129,17 +129,17 @@ function deploy_object() {
       display_file_and_its_future "$object_in_users_home"
     elif [[ "$action" = "CREATE_DIRS" ]]; then
       deal_with_previous_version "$object_in_users_home"
-      echo_in_verbose_mode "Creating directories for $object_in_local_home"
+      echo -e "$Green Creating directory tree for $Colour_Off $object_in_local_home"
       create_dir_tree "$object_in_local_home" "$object_in_users_home"
     elif [[ "$action" = "DEPLOY" ]]; then
-      echo_in_verbose_mode "Deploying $object_in_local_home"
+      echo_in_verbose_mode "$Green Deploying $object_in_local_home $Colour_Off"
       deal_with_previous_version "$object_in_users_home"
-      echo_in_verbose_mode "\nSymlinking: $object_in_users_home -> $object_in_local_home"
+      echo -e "$Green Symlinking:  $Colour_Off $object_in_users_home -> $object_in_local_home"
       upsert_symlink "$object_in_users_home" "$object_in_local_home"
     elif [[ "$action" = "REPLACE" ]]; then
-      echo_in_verbose_mode "Replacing $object_in_local_home"
+      echo_in_verbose_mode "$Green Replacing  $Colour_Off $object_in_local_home"
       deal_with_previous_version "$object_in_users_home"
-      echo_in_verbose_mode "\nSymlinking: $object_in_users_home -> $object_in_local_home"
+      echo -e "$Green Symlinking:  $Colour_Off $object_in_users_home -> $object_in_local_home"
       upsert_symlink "$object_in_users_home" "$object_in_local_home"
     fi
 }
@@ -148,20 +148,31 @@ function deploy_links_and_folders() {
   echo -e "\nPath where the zsh-dotfiles actually sit  :  $LOCAL_USERS_HOME_DIR";
   echo -e "\nPath where we are going to write them to  :  $USERS_HOME\n\n";
 
-  for file in {.vim,.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.tmux.conf}; do
+
+  folders_tree_to_create=".vim"
+  outer_files_to_sym_link=$(ls -A $LOCAL_USERS_HOME_DIR | grep -v ".DS_Store\|.vim$")
+  vim_files_to_sym_link=$(find $LOCAL_USERS_HOME_DIR/.vim -type f | grep -v ".DS_Store\|.gitkeep" | sed s#$LOCAL_USERS_HOME_DIR/##g )
+  all_files_to_sym_link="$outer_files_to_sym_link $vim_files_to_sym_link"
+  all_files_in_home_dir=$(ls -A $LOCAL_USERS_HOME_DIR | grep -v ".DS_Store")
+
+  for file in $all_files_in_home_dir; do
     deploy_object "$file" "CHECK_STATUS"
   done
 
-  echo ""
+  echo -e "\n"
   read -p "Do you want to deploy with config above [y/n]: " reply
   if [[ "$reply" =~ ^[Nn]$ ]]; then
     echo "Exiting."
     exit 0;
+  else
+    echo -e "\n\n"
   fi
 
-  deploy_object ".vim" "CREATE_DIRS"
+  for folder in $folders_tree_to_create; do
+    deploy_object "$folder" "CREATE_DIRS"
+  done
 
-  for file in {.gvimrc,.vimrc,.zsh_extensions,.zsh_plugins,.zshrc,.tmux.conf,.vim/colors/solarized.vim,.vim/syntax/json.vim}; do
+  for file in $all_files_to_sym_link; do
     if [[ $REPLACE_ALL = true ]]; then
       deploy_object "$file" "REPLACE"
     else
@@ -180,7 +191,7 @@ function create_local_only_extension_file() {
       echo "# This file is used to allow you to write functions" >> "$file_to_create"
       echo "# or aliases that you dont want to have in source control" >> "$file_to_create"
     else
-      echo -e "\n\n.local_only_extension.zsh file already exists, leaving it alone. \nfull path: $file_to_create\n"
+      echo -e "$Yellow \n\n.local_only_extension.zsh file already exists, leaving it alone. $Colour_Off \nfull path: $file_to_create\n"
     fi
 }
 
