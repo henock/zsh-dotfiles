@@ -71,11 +71,14 @@ bureau_git_prompt () {
   echo $_result
 }
 
+
 bureau_precmd () {
-  print -rP '%F{green}%*%f $(bureau_git_prompt) %F{blue}%~%f'
+  print -rP '%F{green}%*%f $(bureau_git_prompt) %F{blue}% %1d %f'
 }
 
+# Enable prompt substitution
 setopt prompt_subst
+
 PROMPT='%0(?.. %F{red} <%?> %f) %F{green}%f '
 RPROMPT=''
 
