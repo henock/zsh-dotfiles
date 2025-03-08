@@ -20,3 +20,9 @@ function open_command() {
 function alias_value() {
     (( $+aliases[$1] )) && echo $aliases[$1]
 }
+
+function all_aliases(){
+  for alias_name in ${(k)aliases}; do
+      echo "Alias: \e[32m$alias_name\e[0m -> \e[31m${aliases[$alias_name]}\e[0m"
+  done
+}
