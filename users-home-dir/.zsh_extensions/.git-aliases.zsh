@@ -9,7 +9,7 @@ alias gcm='git commit -m'
 alias gacm='git add . && git commit -am'
 alias gcf='git config --list'
 # View abbreviated SHA, description, and history graph of the latest 20 commits
-alias gl='git log --pretty=oneline -n 20 --graph --abbrev-commit'
+alias gl='git log --pretty=format:"%C(auto)%h %C(blue)%ad %C(green)(%an)%C(reset) %s" --date=format:"%Y-%m-%d" -n 40 --graph'
 # Show the diff between the latest commit and the current state
 alias gd='git diff-index --quiet HEAD -- || clear; git --no-pager diff --patch-with-stat'
 alias gds='git diff --staged'
