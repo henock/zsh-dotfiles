@@ -47,6 +47,8 @@ complete -o nospace -C /usr/local/bin/nomad nomad
 
 end_time="$(date +%s)"
 
+export CLICOLOR=1
+export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
 
 ## HAS TO BE THE LAST FOR IT WORK
 source ~/.zsh_plugins/zsh-syntax-highlighting.zsh
