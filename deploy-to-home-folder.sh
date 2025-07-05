@@ -29,41 +29,31 @@ function deal_with_previous_version() {
   if [[ $REPLACE_ALL = true ]]; then
     check_with_user_and_remove "$1"
   else
-    check_with_user_and_backup "$1" "$2"
+    check_with_user_and_backup "$@"
   fi
 }
 
 function check_with_user_and_backup() {
   local target_file="$1"
-  local backup_destination="$2"
   if [[ -e "$target_file" ]]; then
-    echo_in_verbose_mode "$target_file exists"
+    echo -e "$Green Backing up $object_in_users_home $Colour_Off"
     if [ "$#" -eq 1 ]; then
       local back_up_name_extension=$(short_date)
       local backup_destination="$target_file.$back_up_name_extension.bak"
     fi
 
     if [[ -d "$target_file" ]]; then
-      echo ""
-      read -p "\n\nDo you want to backup (by moving) dir \n$target_file to\n$backup_destination [y/n]: " reply
-      if [[ $reply =~ ^[Yy]$ ]]; then
-        echo_in_verbose_mode "\n\nBacking up dir \n$target_file to \n$backup_destination"
-        mv -f "$target_file" "$backup_destination"
-      else
-        echo -e "\nExiting please deal with $target_file and restart."
-        exit 0;
-      fi
+      echo_in_verbose_mode "\n\nBacking up dir \n$target_file to \n$backup_destination"
+      mv -f "$target_file" "$backup_destination"
+    elif [ -L "$target_file" ]; then
+      echo_in_verbose_mode "Backing up symlink (copying) from: $target_file to $backup_destination"
+      cp -P "$target_file" "$backup_destination"
     elif [[ -f "$target_file" ]]; then
       local ls_of_target_file="\n$(ls $1)\n"
-      echo ""
-      read -p "\n\nDo you want to backup (by moving):\n$target_file to\n$backup_destination [y/n]: " reply
-      if [[ $reply =~ ^[Yy]$ ]]; then
-        echo_in_verbose_mode "Backing up file $target_file to $backup_desdirn"
-        mv -f "$target_file" "$backup_destination"
-      else
-        echo -e "\nExiting please deal with $target_file and restart."
-        exit 0;
-      fi
+      echo_in_verbose_mode "Backing up file $target_file to $backup_desdirn"
+      mv "$target_file" "$backup_destination"
+    else
+      echo "$Red Not sure what to do with $target_file, (its not a dir,file or symlink) leaving it alone. $Colour_Off"
     fi
   fi
 }
@@ -127,18 +117,18 @@ function deploy_object() {
 
     if [[ "$action" = "CHECK_STATUS" ]]; then
       display_file_and_its_future "$object_in_users_home"
-    elif [[ "$action" = "CREATE_DIRS" ]]; then
+    elif [[ "$action" = "BACK_UP" ]]; then      
       deal_with_previous_version "$object_in_users_home"
+    elif [[ "$action" = "CREATE_DIRS" ]]; then
+      echo_in_verbose_mode "$Green Creating Dirs $object_in_users_home $Colour_Off"
       echo -e "$Green Creating directory tree for $Colour_Off $object_in_local_home"
       create_dir_tree "$object_in_local_home" "$object_in_users_home"
     elif [[ "$action" = "DEPLOY" ]]; then
       echo_in_verbose_mode "$Green Deploying $object_in_local_home $Colour_Off"
-      deal_with_previous_version "$object_in_users_home"
       echo -e "$Green Symlinking:  $Colour_Off $object_in_users_home -> $object_in_local_home"
       upsert_symlink "$object_in_users_home" "$object_in_local_home"
     elif [[ "$action" = "REPLACE" ]]; then
       echo_in_verbose_mode "$Green Replacing  $Colour_Off $object_in_local_home"
-      deal_with_previous_version "$object_in_users_home"
       echo -e "$Green Symlinking:  $Colour_Off $object_in_users_home -> $object_in_local_home"
       upsert_symlink "$object_in_users_home" "$object_in_local_home"
     fi
@@ -167,6 +157,10 @@ function deploy_links_and_folders() {
   else
     echo -e "\n\n"
   fi
+
+  for file in $all_files_in_home_dir; do
+    deploy_object "$file" "BACK_UP"
+  done
 
   for folder in $folders_tree_to_create; do
     deploy_object "$folder" "CREATE_DIRS"
