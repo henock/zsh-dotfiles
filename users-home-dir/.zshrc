@@ -17,6 +17,9 @@ setopt HIST_VERIFY
 # export LINUX_USR=zewdeh - now set specific to host in .local_only_extension.zsh
 export PATH="$HOME/bin:$PATH";
 
+# Make sure that homebrew provisioned version of programs are run before those of the system.
+export PATH="/opt/homebrew/bin:$PATH"
+
 #Stop highlighting text when pasting into the terminal
 zle_highlight=('paste:none')
 
